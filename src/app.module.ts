@@ -9,16 +9,7 @@ import { LotsService } from './lots/lots.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'user',
-      password: 'password',
-      database: 'auction',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
-    }),
+    TypeOrmModule.forRoot(),
   ],
   controllers: [AppController, ItemsController, LotsController],
   providers: [AppService, ItemsService, LotsService],
