@@ -388,3 +388,5 @@ Temporary Items
 =======
 # Local
 dist
+
+*-lock.json
