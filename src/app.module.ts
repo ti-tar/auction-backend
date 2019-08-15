@@ -6,10 +6,12 @@ import { ItemsController } from './items/items.controller';
 import { ItemsService } from './items/items.service';
 import { LotsController } from './lots/lots.controller';
 import { LotsService } from './lots/lots.service';
+import { LotsModule } from './lots/lots.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
+    LotsModule,
   ],
   controllers: [AppController, ItemsController, LotsController],
   providers: [AppService, ItemsService, LotsService],

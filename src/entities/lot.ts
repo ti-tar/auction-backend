@@ -1,5 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
+enum Status {
+  pending = 'pending',
+  inProcess = 'inProcess',
+  closed = 'closed'
+}
+
 @Entity()
 export class Lot {
   @PrimaryGeneratedColumn()
@@ -8,24 +14,24 @@ export class Lot {
   @Column({ type: 'varchar', length: 255})
   title: string;
 
-  @Column({ type: 'varchar', length: 255})
+  @Column({ type: 'varchar', length: 255, nullable: true})
   image?: string;
 
-  @Column({ type: 'text'})
+  @Column({ type: 'text', nullable: true})
   description?: string;
 
-  @Column({ type: 'varchar', length: 255})
+  @Column({type: 'enum', enum: Status})
   status: string;
 
-  @Column("float")
-  currentPrice: number;
+  @Column({ type: 'float'})
+  current_price: number;
 
-  @Column("float")
-  estimatedPrice: number;
+  @Column({ type: 'float'})
+  estimated_price: number;
 
-  @Column("datetime")
-  lotStartTime: string;
+  @Column({ type: 'timestamp'})
+  start_time: Date;
 
-  @Column("datetime")
-  lotEndTime: string;
+  @Column({ type: 'timestamp'})
+  end_time: Date;
 }

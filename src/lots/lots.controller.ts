@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Body, UsePipes } from '@nestjs/common';
 
 import { LotsService } from './lots.service';
-import { Lot } from './lot.interface';
+import { Lot } from '../entities/lot';
 
-import { VadationLotPipe } from '../common/validationLot.pipe';
-import { CreateLotDto } from './create-lot.dto';
+// import { VadationLotPipe } from '../common/validationLot.pipe';
+// import { CreateLotDto } from './create-lot.dto';
 
 @Controller('lots')
 export class LotsController {
@@ -16,8 +16,8 @@ export class LotsController {
   }
 
   @Post()
-  @UsePipes(new VadationLotPipe())
-  async create(@Body() createLotDto: CreateLotDto) {
-    this.lotsService.create(createLotDto);
+  //@UsePipes(new VadationLotPipe())
+  create(@Body() lot: Lot) {
+    return this.lotsService.create(lot);
   }
 }
