@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { User } from './user';
 
 enum Status {
   pending = 'pending',
@@ -35,4 +36,7 @@ export class Lot {
 
   @Column({ type: 'timestamp'})
   end_time: Date;
+
+  @ManyToOne(type => User, user => user.first_name)
+  user: User;
 }

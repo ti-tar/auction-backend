@@ -10,7 +10,7 @@ import { LotsModule } from './lots/lots.module';
   imports: [
     TypeOrmModule.forRoot(),
     LotsModule,
-  ],
+  ],  
   controllers: [AppController],
   providers: [],
 })
