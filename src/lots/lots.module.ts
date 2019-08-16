@@ -8,7 +8,9 @@ import { LotsController } from '../lots/lots.controller';
 @Module({
   imports: [TypeOrmModule.forFeature([Lot])],
   providers: [LotsService],
-  controllers: [LotsController],
+  controllers: [
+    LotsController
+  ],
 })
 
 export class LotsModule {}

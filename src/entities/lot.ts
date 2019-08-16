@@ -4,10 +4,11 @@ enum Status {
   pending = 'pending',
   inProcess = 'inProcess',
   closed = 'closed'
-}
+};
 
-@Entity()
+@Entity('lots')
 export class Lot {
+
   @PrimaryGeneratedColumn()
   id: number;
 

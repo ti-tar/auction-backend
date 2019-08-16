@@ -7,7 +7,7 @@ import { Lot } from '../entities/lot';
 @Injectable()
 export class LotsService {
   constructor(
-    // @InjectRepository(Lot)
+    @InjectRepository(Lot)
     private lotsRepository: Repository<Lot>
   ) {}
 
