@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, UsePipes } from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, UsePipes, Param } from '@nestjs/common';
 
 import { LotsService } from './lots.service';
 import { Lot } from '../entities/lot';
 
-// import { VadationLotPipe } from '../common/validationLot.pipe';
-// import { CreateLotDto } from './create-lot.dto';
+import { VadationPipe } from '../common/validation.pipe';
+import { async } from 'rxjs/internal/scheduler/async';
+import { CreateLotDto } from './create-lot.dto';
 
 @Controller('lots')
 export class LotsController {
@@ -15,9 +16,14 @@ export class LotsController {
     return this.lotsService.findAll();
   }
 
+  @Get(':id')
+  async find(@Param('id') id: number): Promise<Lot> {
+    return this.lotsService.find(id);
+  }
+
+  @UsePipes(new VadationPipe())
   @Post()
-  //@UsePipes(new VadationLotPipe())
-  create(@Body() lot: Lot) {
-    return this.lotsService.create(lot);
+  async create(@Body() lotData: CreateLotDto) {
+    return this.lotsService.create(lotData);
   }
 }

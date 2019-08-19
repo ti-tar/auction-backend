@@ -6,12 +6,12 @@ export class Bid {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  bid_creation_time: Date;
+  @Column({ name: 'bid_creation_time' })
+  bidCreationTime: Date;
 
-  @Column()
-  proposed_price: number;
+  @Column({ name: 'proposed_price' })
+  proposedPrice: number;
   
-  @ManyToOne(type => User, user => user.first_name)
+  @ManyToOne(type => User, user => user.firstName)
   user: User;
 }

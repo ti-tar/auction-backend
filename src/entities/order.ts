@@ -27,6 +27,6 @@ export class Order {
   @Column({type: 'enum', enum: Status})
   status: string;
 
-  @OneToOne(type => Bid, bid => bid.proposed_price)
+  @OneToOne(type => Bid, bid => bid.proposedPrice)
   bid: Bid;
 }

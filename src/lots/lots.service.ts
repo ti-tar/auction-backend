@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Lot } from '../entities/lot';
-// import { CreateLotDto } from './create-lot.dto';
+// DTO's  
+import { CreateLotDto } from './create-lot.dto';
 
 @Injectable()
 export class LotsService {
@@ -15,12 +16,48 @@ export class LotsService {
     return await this.lotsRepository.find();
   }
 
-  async create(lot: Lot) {
-    await this.lotsRepository.save(lot)
-  } 
+  async find(id: number): Promise<Lot> {
+    return await this.lotsRepository.findOne(id);
+  }
 
-  // create(lot: Lot) {
-  // async create(lot: CreateLotDto) {
-  //   await this.lotsRepository.save(lot);
-  // } 
+  async create(lotRequest: CreateLotDto) {
+    
+    // todo validation & check
+
+    // throw new HttpException([{message: 'Input data validation failed'}], HttpStatus.BAD_REQUEST);
+
+    // create new lot
+
+
+    // readonly title: string;
+    // readonly image?: string;
+    // readonly description?: string;
+    // readonly currentPrice: number;
+    // readonly estimatedPrice: number;
+    // readonly startTime: string;
+    // readonly endTime: string;
+
+
+    const moment = require("moment");
+
+    const { title, image, description, status, currentPrice, estimatedPrice, startTime, endTime } = lotRequest;
+
+    let newLot = new Lot();
+    newLot.title = title;
+    newLot.image = image;
+    newLot.description = description;
+    newLot.status = status;
+    newLot.currentPrice = currentPrice;
+    newLot.estimatedPrice = estimatedPrice;
+    newLot.startTime = moment(startTime);
+    newLot.endTime = moment(endTime);
+
+    // todo validation !!!
+
+    const savedUser = await this.lotsRepository.save(newLot);
+
+    // console.log(savedUser);
+
+    // console.log(await this.lotsRepository.save(lotRequest));
+  } 
 }

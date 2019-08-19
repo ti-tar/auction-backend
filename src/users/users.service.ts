@@ -54,7 +54,7 @@ export class UsersService {
 
     // create new user
     let newUser = new User();
-    newUser.first_name = username;
+    newUser.firstName = username;
     newUser.email = email;
     newUser.password = password;
 
@@ -114,7 +114,7 @@ export class UsersService {
 
   private buildUserRO(user: User) {
     const userRO = {
-      username: user.first_name,
+      username: user.firstName,
       email: user.email,
       token: this.generateJWT(user),
     };

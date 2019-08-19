@@ -1,4 +1,5 @@
-import { IsString, IsNumber } from 'class-validator';
+import { IsString, IsNumber, IsDateString, IsEnum } from 'class-validator';
+import { Status } from '../entities/lot';
 
 export class CreateLotDto {
   @IsString() 
@@ -10,12 +11,18 @@ export class CreateLotDto {
   @IsString() 
   readonly description?: string;
 
+  @IsEnum(Status)
+  readonly status: string;
+
   @IsNumber()
   readonly currentPrice: number;
 
-  @IsString()
-  readonly lotStartTime: string;
+  @IsNumber()
+  readonly estimatedPrice: number;
 
-  @IsString()
-  readonly lotEndTime: string;
+  @IsDateString()
+  readonly startTime: string;
+
+  @IsDateString()
+  readonly endTime: string;
 }

@@ -1,7 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+// import { Transform } from 'class-transformer';
+
 import { User } from './user';
 
-enum Status {
+// const moment = require("moment");
+
+export enum Status {
   pending = 'pending',
   inProcess = 'inProcess',
   closed = 'closed'
@@ -13,30 +17,32 @@ export class Lot {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 255})
+  @Column({ name: 'title', type: 'varchar', length: 255})
   title: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true})
+  @Column({ name: 'image', type: 'varchar', length: 255, nullable: true})
   image?: string;
 
-  @Column({ type: 'text', nullable: true})
+  @Column({ name: 'description', type: 'text', nullable: true})
   description?: string;
 
-  @Column({type: 'enum', enum: Status})
+  @Column({ name: 'status', type: 'enum', enum: Status})
   status: string;
 
-  @Column({ type: 'float'})
-  current_price: number;
+  @Column({ name: 'current_price', type: 'float'})
+  currentPrice: number;
 
-  @Column({ type: 'float'})
-  estimated_price: number;
+  @Column({ name: 'estimated_price', type: 'float'})
+  estimatedPrice: number;
 
-  @Column({ type: 'timestamp'})
-  start_time: Date;
+  // @Transform((startTime:string): Date => moment(startTime))
+  @Column({ name: 'start_time', type: 'timestamp'})
+  startTime: Date;
 
-  @Column({ type: 'timestamp'})
-  end_time: Date;
+  // @Transform((endTime:string): Date => moment(endTime))
+  @Column({ name: 'end_time', type: 'timestamp'})
+  endTime: Date;
 
-  @ManyToOne(type => User, user => user.first_name)
+  @ManyToOne(type => User, user => user.firstName)
   user: User;
 }
