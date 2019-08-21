@@ -53,7 +53,7 @@ export class LotsService {
 
     // todo validation !!!
 
-    const savedUser = await this.lotsRepository.save(newLot);
+    return await this.lotsRepository.save(newLot);
 
     // console.log(savedUser);
 

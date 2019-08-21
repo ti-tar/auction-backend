@@ -11,9 +11,15 @@ import { VadationPipe } from '../common/validation.pipe';
 import { async } from 'rxjs/internal/scheduler/async';
 import { CreateLotDto } from './create-lot.dto';
 import { from } from 'rxjs';
+import { LotRepository } from './lots.repository';
 
 interface LotsResponse {
   resources: Lot[],
+  meta: object,
+}
+
+interface LotResponse {
+  resource: Lot,
   meta: object,
 }
 
@@ -36,7 +42,10 @@ export class LotsController {
 
   @UsePipes(new VadationPipe())
   @Post()
-  async create(@Body() lotData: CreateLotDto) {
-    return this.lotsService.create(lotData);
+  async create(@Body() lotData: CreateLotDto): Promise<LotResponse> {
+    return { 
+      resource: await this.lotsService.create(lotData), 
+      meta: {} 
+    };
   }
 }
