@@ -5,7 +5,7 @@ import { plainToClass } from 'class-transformer';
 @Injectable()
 export class VadationPipe implements PipeTransform<any> {
   async transform(value, metadata: ArgumentMetadata) {
-    // console.log(value)
+    console.log(value)
     // console.log(metadata)
     const { metatype } = metadata;
 
@@ -16,6 +16,7 @@ export class VadationPipe implements PipeTransform<any> {
     const object = plainToClass(metatype, value);
     const errors = await validate(object);
     if(errors.length > 0) {
+      console.log(errors);
       this.throwErrorResponse(errors);
       // throw new BadRequestException('Validation failed');
     }

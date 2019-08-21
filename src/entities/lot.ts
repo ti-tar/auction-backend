@@ -26,8 +26,8 @@ export class Lot {
   @Column({ name: 'description', type: 'text', nullable: true})
   description?: string;
 
-  @Column({ name: 'status', type: 'enum', enum: Status})
-  status: string;
+  @Column({ name: 'status', type: 'enum', enum: Status, default: 'pending'})
+  status?: string;
 
   @Column({ name: 'current_price', type: 'float'})
   currentPrice: number;

@@ -11,8 +11,8 @@ export class CreateLotDto {
   @IsString() 
   readonly description?: string;
 
-  @IsEnum(Status)
-  readonly status: string;
+  // @IsEnum(Status)
+  // readonly status: string;
 
   @IsNumber()
   readonly currentPrice: number;

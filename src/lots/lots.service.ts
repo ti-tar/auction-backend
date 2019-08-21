@@ -40,13 +40,12 @@ export class LotsService {
 
     const moment = require("moment");
 
-    const { title, image, description, status, currentPrice, estimatedPrice, startTime, endTime } = lotRequest;
+    const { title, image, description, currentPrice, estimatedPrice, startTime, endTime } = lotRequest;
 
     let newLot = new Lot();
     newLot.title = title;
     newLot.image = image;
     newLot.description = description;
-    newLot.status = status;
     newLot.currentPrice = currentPrice;
     newLot.estimatedPrice = estimatedPrice;
     newLot.startTime = moment(startTime);
