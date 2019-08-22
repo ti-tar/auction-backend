@@ -36,8 +36,11 @@ export class LotsController {
   }
 
   @Get(':id')
-  async find(@Param('id') id: number): Promise<Lot> {
-    return this.lotsService.find(id);
+  async find(@Param('id') id: number): Promise<LotResponse> {
+    return { 
+      resource: await this.lotsService.find(id), 
+      meta: {} 
+    };
   }
 
   @UsePipes(new VadationPipe())
