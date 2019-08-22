@@ -1,7 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToMany, BeforeInsert } from 'typeorm';
+import { IsEmail } from 'class-validator';
 import { Exclude } from 'class-transformer';
 import { Lot } from './lot';
 import { Bid } from './bid';
+
+// utils
+import { createHmac } from 'crypto';
+
 
 @Entity('users')
 @Unique(['email', 'phone'])
@@ -11,6 +16,7 @@ export class User {
   id: number;
 
   @Column({ name: 'email', type: 'varchar', length: 255 })
+  @IsEmail()
   email: string;
 
   @Column({ name: 'phone', type: 'integer' })
@@ -28,6 +34,11 @@ export class User {
 
   @Column({ name: 'birthday', type: 'timestamp' })
   birthday: Date;
+
+  @BeforeInsert()
+  hashPassword() {
+    this.password = createHmac('sha256', this.password).digest('hex')
+  }
 
   @OneToMany(type => Lot, user => user.title)
   lots: Lot[];

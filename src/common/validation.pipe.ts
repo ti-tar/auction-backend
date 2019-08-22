@@ -2,6 +2,8 @@ import { ArgumentMetadata, Injectable, PipeTransform, HttpException, HttpStatus 
 import { validate, ValidationError } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 
+import { throwErrorResponse } from '../libs/errors';
+
 @Injectable()
 export class VadationPipe implements PipeTransform<any> {
   async transform(value, metadata: ArgumentMetadata) {
@@ -17,7 +19,7 @@ export class VadationPipe implements PipeTransform<any> {
     const errors = await validate(object);
     if(errors.length > 0) {
       console.log(errors);
-      this.throwErrorResponse(errors);
+      throwErrorResponse(errors);
       // throw new BadRequestException('Validation failed');
     }
     return value;
@@ -26,18 +28,5 @@ export class VadationPipe implements PipeTransform<any> {
   private toValidate(metatype): boolean {
     const types = [String, Boolean, Number, Array, Object];
     return !types.find(type => metatype === type);
-  }
-
-  throwErrorResponse(errors: ValidationError[]): void {
-
-    const errorMsgs = []
-    errors.forEach((error: ValidationError): void => {
-      errorMsgs.push({
-        property: error.property, 
-        message: `${error.constraints ? Object.keys(error.constraints).map(k => error.constraints[k]).join(', ') : '' }`
-      })
-    });
-
-    throw new HttpException(errorMsgs, HttpStatus.BAD_REQUEST);
   }
 }

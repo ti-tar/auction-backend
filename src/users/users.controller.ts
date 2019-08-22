@@ -8,6 +8,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 // decorator
 import { UserJWT } from './user.decorator';
+import { VadationPipe } from '../common/validation.pipe';
 
 @Controller('users')
 export class UsersController {
@@ -23,9 +24,9 @@ export class UsersController {
     return await this.userService.update(userId, userData);
   }
 
-  
-  @Post('users')
-  async create(@Body('user') userData: CreateUserDto) {
+  @UsePipes(new VadationPipe())
+  @Post()
+  async create(@Body() userData: CreateUserDto) {
     return this.userService.create(userData);
   }
 

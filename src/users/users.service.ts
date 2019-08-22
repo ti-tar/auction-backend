@@ -35,39 +35,35 @@ export class UsersService {
     return await this.userRepository.findOne(findOneOptions);
   }
 
-  async create(dto: CreateUserDto): Promise<any> {
+  async create(createUserDto: CreateUserDto): Promise<any> {
 
     // check uniqueness of username/email
-    const {username, email, password} = dto;
+    const { firstName, lastName, email, password } = createUserDto;
     const qb = await getRepository(User)
       .createQueryBuilder('user')
-      .where('user.username = :username', { username })
-      .orWhere('user.email = :email', { email });
+      .where('user.email = :email', { email });
 
     const user = await qb.getOne();
 
     if (user) {
-      const errors = {username: 'Username and email must be unique.'};
-      throw new HttpException({message: 'Input data validation failed', errors}, HttpStatus.BAD_REQUEST);
-
+     
+      // todo --- with DTO ???
+      throw new HttpException([
+        {
+          property: 'email',
+          message: 'Email must be unique. Already registered.'
+        }
+      ], HttpStatus.BAD_REQUEST);
     }
 
     // create new user
     let newUser = new User();
-    newUser.firstName = username;
+    newUser.firstName = firstName;
+    newUser.lastName = lastName;
     newUser.email = email;
     newUser.password = password;
 
-
     const errors = await validate(newUser);
-    if (errors.length > 0) {
-      const _errors = {username: 'Userinput is not valid.'};
-      throw new HttpException({message: 'Input data validation failed', _errors}, HttpStatus.BAD_REQUEST);
-
-    } else {
-      const savedUser = await this.userRepository.save(newUser);
-      return this.buildUserRO(savedUser);
-    }
 
   }
 

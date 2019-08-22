@@ -389,4 +389,5 @@ Temporary Items
 # Local
 dist
 
+package-lock.json
 *-lock.json
