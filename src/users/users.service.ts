@@ -4,6 +4,7 @@ import { Repository, getRepository, DeleteResult } from 'typeorm';
 import { validate } from 'class-validator';
 const jwt = require('jsonwebtoken');
 import { SECRET } from '../config';
+import { throwErrorResponse } from '../libs/errors';
 // entities
 import { User } from '../entities/user';
 // dto
@@ -32,18 +33,20 @@ export class UsersService {
       password: crypto.createHmac('sha256', loginUserDto.password).digest('hex'),
     };
 
+    console.log('service');
+    console.log(findOneOptions);
     return await this.userRepository.findOne(findOneOptions);
   }
 
   async create(createUserDto: CreateUserDto): Promise<any> {
 
     // check uniqueness of username/email
-    const { firstName, lastName, email, password } = createUserDto;
-    const qb = await getRepository(User)
-      .createQueryBuilder('user')
-      .where('user.email = :email', { email });
+    const { firstName, lastName, email, phone, password } = createUserDto;
 
-    const user = await qb.getOne();
+    const user = await getRepository(User)
+      .createQueryBuilder('users')
+      .where('users.email = :email', { email })
+      .getOne();
 
     if (user) {
      
@@ -61,10 +64,23 @@ export class UsersService {
     newUser.firstName = firstName;
     newUser.lastName = lastName;
     newUser.email = email;
+    newUser.phone = phone;
     newUser.password = password;
 
     const errors = await validate(newUser);
 
+    if (errors.length > 0){
+      // todo --- with DTO ???
+      throwErrorResponse(errors);
+    } 
+
+    try {
+      const savedUser = await this.userRepository.save(newUser);
+      return this.buildUserRO(savedUser);
+    } catch ( errors ) {
+      // console.log(errors);
+      throw new HttpException({message: 'Error occured while saving user!'}, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async update(id: number, dto: UpdateUserDto): Promise<User> {
@@ -95,26 +111,27 @@ export class UsersService {
     return this.buildUserRO(user);
   }
 
-  public generateJWT(user) {
+  public generateJWT(user: User) {
     let today = new Date();
     let exp = new Date(today);
     exp.setDate(today.getDate() + 60);
 
     return jwt.sign({
       id: user.id,
-      username: user.username,
+      firstName: user.firstName,
       email: user.email,
       exp: exp.getTime() / 1000,
     }, SECRET);
   };
 
-  private buildUserRO(user: User) {
-    const userRO = {
-      username: user.firstName,
-      email: user.email,
-      token: this.generateJWT(user),
-    };
+  private buildUserRO(user: User): {user: UserInterface} {
 
-    return {user: userRO};
+    return {
+      user: {
+        firstName: user.firstName,
+        email: user.email,
+        token: this.generateJWT(user),
+      }
+    };
   }
 }

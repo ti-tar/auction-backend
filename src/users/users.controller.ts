@@ -35,16 +35,22 @@ export class UsersController {
     return await this.userService.delete(params.slug);
   }
 
-  @Post('users/login')
-  async login(@Body('user') loginUserDto: LoginUserDto): Promise<any> {
-    const _user = await this.userService.findOne(loginUserDto);
+  @Post('login')
+  async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
+    // console.log('loginUserDto');
+    // console.log(loginUserDto);
+    const user = await this.userService.findOne(loginUserDto);
 
-    const errors = {User: ' not found'};
-    if (!_user) throw new HttpException({errors}, 401);
+    // console.log('user');
+    // console.log(user);
+    if (!user){
+      throw new HttpException({User: ' not found'}, 401);
+    }
 
-    const token = await this.userService.generateJWT(_user);
-    const {email, firstName, } = _user;
-    const user = {email, token, firstName};
-    return {user}
+    const token = await this.userService.generateJWT(user);
+
+    const {email, firstName } = user;
+
+    return { email, firstName, token };
   }
 }

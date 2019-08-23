@@ -1,5 +1,5 @@
 export interface UserInterface {
-  first_name: string;
+  firstName: string;
   email: string;
   token: string;
 }

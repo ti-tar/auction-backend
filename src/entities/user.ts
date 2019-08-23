@@ -19,8 +19,8 @@ export class User {
   @IsEmail()
   email: string;
 
-  @Column({ name: 'phone', type: 'integer' })
-  phone: number;
+  @Column({ name: 'phone', type: 'varchar', length: 12 }) // '+' and 11 nums
+  phone: string;
 
   @Exclude()
   @Column({ name: 'password', type: 'varchar', length: 255 })
@@ -31,9 +31,6 @@ export class User {
   
   @Column({ name: 'last_name', type: 'varchar', length: 255 })
   lastName: string;
-
-  @Column({ name: 'birthday', type: 'timestamp' })
-  birthday: Date;
 
   @BeforeInsert()
   hashPassword() {
