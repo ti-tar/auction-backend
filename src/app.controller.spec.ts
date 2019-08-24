@@ -2,20 +2,37 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-describe('AppController', () => {
-  let app: TestingModule;
+describe("AppController", () => {
+  let testingModule: TestingModule;
+  let controller: AppController;
+  let spyService: AppService;
 
-  beforeAll(async () => {
-    app = await Test.createTestingModule({
+  beforeEach(async () => {
+    testingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        {
+          provide: AppService,
+          useFactory: () => ({
+            getHello: jest.fn(() => "May, the 4th b with u"),
+          }),
+        },
+      ],
     }).compile();
+    controller = testingModule.get(AppController);
+    spyService = testingModule.get(AppService);
   });
 
-  describe('getHello', () => {
-    it('should return "Hello World!"', () => {
-      const appController = app.get<AppController>(AppController);
-      expect(appController.getHello()).toBe('Hello World!');
+  describe("getHello()", () => {
+
+    it("Is getHello been called", async () => {
+      controller.getHello();
+      expect(spyService.getHello).toHaveBeenCalled();
+    });
+
+    it("Method getHello returns mocked string.", () => {
+      expect(controller.getHello()).toBe("May, the 4th b with u");
     });
   });
+
 });
