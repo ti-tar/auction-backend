@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Lot } from '../entities/lot';
@@ -22,22 +22,6 @@ export class LotsService {
 
   async create(lotRequest: CreateLotDto) {
     
-    // todo validation & check
-
-    // throw new HttpException([{message: 'Input data validation failed'}], HttpStatus.BAD_REQUEST);
-
-    // create new lot
-
-
-    // readonly title: string;
-    // readonly image?: string;
-    // readonly description?: string;
-    // readonly currentPrice: number;
-    // readonly estimatedPrice: number;
-    // readonly startTime: string;
-    // readonly endTime: string;
-
-
     const moment = require("moment");
 
     const { title, image, description, currentPrice, estimatedPrice, startTime, endTime } = lotRequest;

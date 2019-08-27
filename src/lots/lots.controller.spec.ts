@@ -2,14 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LotsController } from './lots.controller';
 import { LotsService } from './lots.service';
 import { Lot } from '../entities/lot';
+import { async } from 'rxjs/internal/scheduler/async';
 
 describe('Lots Controller', () => {
 
-  let testingModule;
-  let lotsService;
-  let lotsController;
+  let testingModule: TestingModule;
+  let lotsService: LotsService;
+  let lotsController: LotsController;
 
-  const mockedFindAllResponse = [1,2,3];
+  const mockedServiceFindAllResponse = [1,2,3];
+  const expectedControlelrFindAllResponse = {meta: {}, resources: [1,2,3]};
 
   beforeEach(async () => {
     testingModule = await Test.createTestingModule({
@@ -18,7 +20,7 @@ describe('Lots Controller', () => {
         {
           provide: LotsService,
           useFactory: () => ({
-            findAll: jest.fn(() => mockedFindAllResponse),
+            findAll: jest.fn(() => mockedServiceFindAllResponse),
             find: jest.fn(() => true),
             create: jest.fn(() => true),
           }),
@@ -35,19 +37,10 @@ describe('Lots Controller', () => {
       expect(lotsService.findAll).toHaveBeenCalled();
       
     });
-    it('findAll() resturns proper response', () => {
-      expect(lotsService.findAll()).toBe(mockedFindAllResponse);
+
+    it('findAll() resturns proper response', async () => {
+      expect(await lotsController.findAll()).toStrictEqual(expectedControlelrFindAllResponse);
     });
   });
-
-    // it('lot by id', () => {
-    //   const lots = [];
-    //   expect(typeof lots).toBe('object');
-    // });
-  
-    // it('lot by wrong id', () => {
-    //   const lots = [];
-    //   expect(typeof lots).toBe('object');
-    // });
-  
+ 
 });
