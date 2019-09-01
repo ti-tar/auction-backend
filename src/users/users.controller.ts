@@ -51,6 +51,9 @@ export class UsersController {
 
     const {email, firstName } = user;
 
-    return { email, firstName, token };
+    return {
+      resource: { email, firstName, token },
+      meta: {}
+    };
   }
 }
