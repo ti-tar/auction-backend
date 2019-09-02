@@ -8,10 +8,8 @@ import { LotsService } from './lots.service';
 import { Lot } from '../entities/lot';
 
 import { VadationPipe } from '../common/validation.pipe';
-import { async } from 'rxjs/internal/scheduler/async';
 import { CreateLotDto } from './create-lot.dto';
-import { from } from 'rxjs';
-import { LotRepository } from './lots.repository';
+
 
 interface LotsResponse {
   resources: Lot[],
@@ -37,7 +35,7 @@ export class LotsController {
 
   @Get(':id')
   async find(@Param('id') id: number): Promise<LotResponse> {
-    return { 
+    return {
       resource: await this.lotsService.find(id), 
       meta: {} 
     };
@@ -46,7 +44,7 @@ export class LotsController {
   @UsePipes(new VadationPipe())
   @Post()
   async create(@Body() lotData: CreateLotDto): Promise<LotResponse> {
-    return { 
+    return {
       resource: await this.lotsService.create(lotData), 
       meta: {} 
     };

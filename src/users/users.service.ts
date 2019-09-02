@@ -33,10 +33,12 @@ export class UsersService {
       password: crypto.createHmac('sha256', loginUserDto.password).digest('hex'),
     };
 
-    console.log('service');
-    console.log(findOneOptions);
     return await this.userRepository.findOne(findOneOptions);
   }
+
+  async findOneById(id: number): Promise<User> {
+    return await this.userRepository.findOne({ id });
+  };
 
   async create(createUserDto: CreateUserDto): Promise<any> {
 

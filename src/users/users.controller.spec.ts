@@ -11,8 +11,16 @@ describe('Users Controller', () => {
 
     controller = module.get<UsersController>(UsersController);
   });
+  
+  it.todo('findAll');
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+  it.todo('findOne');
+
+  it.todo('findOneById');
+
+  it.todo('create');
+
+  it.todo('delete');
+
+  it.todo('update');
 });

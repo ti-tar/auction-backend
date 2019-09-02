@@ -3,7 +3,7 @@ import { ValidationError } from 'class-validator';
 
 export const throwErrorResponse = (errors: ValidationError[]): void => {
 
-  const errorMsgs = []
+  const errorMsgs = [];
   errors.forEach((error: ValidationError): void => {
     errorMsgs.push({
       property: error.property, 
