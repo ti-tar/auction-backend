@@ -49,10 +49,10 @@ export class UsersController {
 
     const token = await this.userService.generateJWT(user);
 
-    const {email, firstName } = user;
+    const {id, email, firstName } = user;
 
     return {
-      resource: { email, firstName, token },
+      resource: { id, email, firstName, token },
       meta: {}
     };
   }

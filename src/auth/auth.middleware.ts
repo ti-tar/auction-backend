@@ -19,14 +19,14 @@ export class AuthMiddleware implements NestMiddleware {
       const user = await this.usersService.findOneById(decoded.id);
 
       if (!user) {
-        throw new HttpException('User not found.', HttpStatus.UNAUTHORIZED);
+        throw new HttpException({ message: 'User not found.'}, HttpStatus.UNAUTHORIZED);
       }
 
       req.user = user;
       next();
 
     } else {
-      throw new HttpException('Not authorized.', HttpStatus.UNAUTHORIZED);
+      throw new HttpException({ message: 'You are not authorized.'}, HttpStatus.UNAUTHORIZED);
     }
   }
 }
