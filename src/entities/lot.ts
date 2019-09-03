@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 // import { Transform } from 'class-transformer';
 
 import { User } from './user';
+import { Transform } from 'class-transformer';
 
 // const moment = require("moment");
 
@@ -43,6 +44,6 @@ export class Lot {
   @Column({ name: 'end_time', type: 'timestamp'})
   endTime: Date;
 
-  @ManyToOne(type => User, user => user.firstName)
+  @ManyToOne(type => User, user => user.lots)
   user: User;
 }

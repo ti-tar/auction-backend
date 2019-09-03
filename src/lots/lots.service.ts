@@ -1,26 +1,67 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Request } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, getConnection } from 'typeorm';
 import { Lot } from '../entities/lot';
 // DTO's  
 import { CreateLotDto } from './create-lot.dto';
+import { UpdateLotDto } from './update-lot.dto';
+import { User } from '../entities/user';
 
 @Injectable()
 export class LotsService {
   constructor(
-    @InjectRepository(Lot)
-    private lotsRepository: Repository<Lot>
+    @InjectRepository(Lot) private lotsRepository: Repository<Lot>
   ) {}
 
   async findAll(): Promise<Lot[]> {
-    return await this.lotsRepository.find();
+    return await this.lotsRepository.find({
+      relations: ['user']
+    });
+  }
+
+  async findAllByUserId(id: number): Promise<Lot[]> {
+    return await this.lotsRepository.find({ 
+      where: {user: { id: id }},
+      relations: ['user'],
+    });
   }
 
   async find(id: number): Promise<Lot> {
-    return await this.lotsRepository.findOne(id);
+    return await this.lotsRepository.findOne(
+      { where: {id}, relations: ['user']}
+    );
   }
 
-  async create(lotRequest: CreateLotDto) {
+  async update(lotRequest: UpdateLotDto) {
+
+    const moment = require("moment");
+
+    const { 
+      id, title, image, description, currentPrice, 
+      estimatedPrice, startTime, endTime 
+    } = lotRequest;
+
+    const updatedLot = await getConnection()
+    .createQueryBuilder()
+    .update(Lot)
+    .set({ 
+      title: title,
+      image: image,
+      description: description,
+      currentPrice: currentPrice,
+      estimatedPrice: estimatedPrice,
+      startTime: moment(startTime),
+      endTime: moment(endTime),
+    })
+    .where("id = :id", { id })
+    .execute();
+
+    // console.log(updatedLot); 
+
+    return updatedLot;
+  }
+
+  async create(lotRequest: CreateLotDto, user: User ) {
     
     const moment = require("moment");
 
@@ -37,10 +78,11 @@ export class LotsService {
 
     // todo validation !!!
 
-    return await this.lotsRepository.save(newLot);
+    newLot.user = user;
 
-    // console.log(savedUser);
+    const savedLot = await this.lotsRepository.save(newLot);
 
-    // console.log(await this.lotsRepository.save(lotRequest));
+    return savedLot;
+
   } 
 }

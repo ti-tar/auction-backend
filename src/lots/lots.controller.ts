@@ -1,5 +1,5 @@
 import { 
-  Controller, Get, Put, Post, Body, UsePipes, Param,
+  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Request, UseInterceptors, ClassSerializerInterceptor
 } from '@nestjs/common';
 
 import { Transform } from 'class-transformer';
@@ -9,6 +9,7 @@ import { Lot } from '../entities/lot';
 
 import { VadationPipe } from '../common/validation.pipe';
 import { CreateLotDto } from './create-lot.dto';
+import { UpdateLotDto } from './update-lot.dto';
 
 
 interface LotsResponse {
@@ -27,25 +28,50 @@ export class LotsController {
 
   @Get()
   async findAll(): Promise<LotsResponse> {
+    const lots = await this.lotsService.findAll();
     return { 
-      resources: await this.lotsService.findAll(), 
+      resources: lots, 
+      meta: {} 
+    };
+  }
+
+  @Get('own')
+  async findOwnAll(@Req() request: { [key: string]: any }): Promise<LotsResponse> {
+    const { user } = request;
+    const lots = await this.lotsService.findAllByUserId(user.id);
+    return { 
+      resources: lots, 
       meta: {} 
     };
   }
 
   @Get(':id')
   async find(@Param('id') id: number): Promise<LotResponse> {
+    const lot: Lot =  await this.lotsService.find(id);
+    console.log(lot);
     return {
-      resource: await this.lotsService.find(id), 
+      resource: lot, 
+      meta: {} 
+    };
+  }
+
+  @UsePipes(new VadationPipe())
+  @Put(':id')
+  async update(@Body() lotData: UpdateLotDto): Promise<any> {
+    return {
+      resource: await this.lotsService.update(lotData), 
       meta: {} 
     };
   }
 
   @UsePipes(new VadationPipe())
   @Post()
-  async create(@Body() lotData: CreateLotDto): Promise<LotResponse> {
+  async create(@Body() lotData: CreateLotDto, @Req() request: { [key: string]: any }): Promise<LotResponse> {
+
+    const { user } = request;
+
     return {
-      resource: await this.lotsService.create(lotData), 
+      resource: await this.lotsService.create(lotData, user), 
       meta: {} 
     };
   }

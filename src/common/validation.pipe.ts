@@ -7,8 +7,7 @@ import { throwErrorResponse } from '../libs/errors';
 @Injectable()
 export class VadationPipe implements PipeTransform<any> {
   async transform(value, metadata: ArgumentMetadata) {
-    // console.log(value)
-    // console.log(metadata)
+
     const { metatype } = metadata;
 
     if (!metadata || !this.toValidate(metadata)) {

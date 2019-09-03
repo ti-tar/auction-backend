@@ -1,4 +1,4 @@
-import { HttpException, Controller, Get, Post, Body, Put, Param, UsePipes, Delete } from '@nestjs/common';
+import { HttpException, HttpStatus, Controller, Get, Post, Body, Put, Param, UsePipes, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
 // interface
 import { UserInterface } from './users.interface';
@@ -44,7 +44,7 @@ export class UsersController {
     // console.log('user');
     // console.log(user);
     if (!user){
-      throw new HttpException({User: ' not found'}, 401);
+      throw new HttpException([{message: `Email or password are incorrect, or you are unregistered yet.`}], HttpStatus.UNAUTHORIZED);
     }
 
     const token = await this.userService.generateJWT(user);

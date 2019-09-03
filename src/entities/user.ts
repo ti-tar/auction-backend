@@ -37,7 +37,7 @@ export class User {
     this.password = createHmac('sha256', this.password).digest('hex')
   }
 
-  @OneToMany(type => Lot, user => user.title)
+  @OneToMany(type => Lot, lot => lot.user)
   lots: Lot[];
 
   @OneToMany(type => Bid, bid => bid.proposedPrice)

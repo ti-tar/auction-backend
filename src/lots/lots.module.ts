@@ -28,6 +28,22 @@ export class LotsModule implements NestModule {
         {
           path: 'lots',
           method: RequestMethod.GET
+        },
+        {
+          path: 'lots/own',
+          method: RequestMethod.GET
+        },
+        {
+          path: 'lots/:id',
+          method: RequestMethod.GET
+        },
+        {
+          path: 'lots',
+          method: RequestMethod.POST
+        },
+        {
+          path: 'lots',
+          method: RequestMethod.PUT
         }
       )
   }
