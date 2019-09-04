@@ -16,8 +16,15 @@ export class BidsService {
   async findAllByLotId(lotId: number): Promise<Bid[]> {
     return await this.bidsRepository.find({ 
       where: {lot: { id: lotId }},
-      relations: ['bid'],
+      relations: ['user'],
     });
+  }
+
+  async getBidsCountByLotId(lotId: number): Promise<number> {
+    return await this.bidsRepository.createQueryBuilder('bids').where({lot: { id: lotId }}).getCount();
+    // find({ 
+    //   where: {lot: { id: lotId }}
+    // });
   }
 
   async create(bidRequest: CreateBidDto, user: User, lot: Lot ) {
@@ -37,8 +44,6 @@ export class BidsService {
     // todo validation !!!
 
     const savedBid = await this.bidsRepository.save(newbid);
-
-    console.log(savedBid);
 
     return savedBid;
   } 

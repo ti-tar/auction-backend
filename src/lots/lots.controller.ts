@@ -84,13 +84,17 @@ export class LotsController {
     };
   }
 
-
   @Get(':lotId/bids')
-  findBidsById(@Param('lotId') lotId: number): any {
+  async findBidsById(@Param('lotId') lotId: number): Promise<any> {
+
+    const bids: Bid[] = await this.bidService.findAllByLotId(lotId);
+    const totalBids: number = await this.bidService.getBidsCountByLotId(lotId);
 
     return {
-      resource: '', 
-      meta: {} 
+      resources: bids, 
+      meta: {
+        total: totalBids,
+      } 
     };
   }
 
