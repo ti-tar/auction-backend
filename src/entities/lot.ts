@@ -2,7 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 // import { Transform } from 'class-transformer';
 
 import { User } from './user';
-import { Transform } from 'class-transformer';
+import { Bid } from './bid';
+
 
 // const moment = require("moment");
 
@@ -46,4 +47,7 @@ export class Lot {
 
   @ManyToOne(type => User, user => user.lots)
   user: User;
+
+  @ManyToOne(type => Bid, bid => bid.lot)
+  bids: Bid[];
 }

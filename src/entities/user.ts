@@ -40,6 +40,6 @@ export class User {
   @OneToMany(type => Lot, lot => lot.user)
   lots: Lot[];
 
-  @OneToMany(type => Bid, bid => bid.proposedPrice)
+  @OneToMany(type => Bid, bid => bid.user)
   bids: Bid[];
 }
