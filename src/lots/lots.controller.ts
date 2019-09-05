@@ -15,7 +15,6 @@ import { VadationPipe } from '../common/validation.pipe';
 import { CreateLotDto } from './create-lot.dto';
 import { CreateBidDto } from './create-bid.dto';
 import { UpdateLotDto } from './update-lot.dto';
-import { async } from 'rxjs/internal/scheduler/async';
 import { DeleteResult } from 'typeorm';
 
 

@@ -78,7 +78,7 @@ export class UsersService {
 
     try {
       const savedUser = await this.userRepository.save(newUser);
-      return this.buildUserRO(savedUser);
+      return savedUser;
     } catch ( errors ) {
       // console.log(errors);
       throw new HttpException({message: 'Error occured while saving user!'}, HttpStatus.BAD_REQUEST);
@@ -97,25 +97,24 @@ export class UsersService {
     return await this.userRepository.delete({ email: email});
   }
 
-  async findById(id: number): Promise<any>{
-    const user = await this.userRepository.findOne(id);
+  // async findById(id: number): Promise<any>{
+  //   const user = await this.userRepository.findOne(id);
 
-    if (!user) {
-      const errors = {User: ' not found'};
-      throw new HttpException({errors}, 401);
-    };
+  //   if (!user) {
+  //     const errors = {User: ' not found'};
+  //     throw new HttpException({errors}, 401);
+  //   };
 
-    return this.buildUserRO(user);
-  }
+  //   return user;
+  // }
 
-  async findByEmail(email: string): Promise<any>{
-    const user = await this.userRepository.findOne({email: email});
-    return this.buildUserRO(user);
+  async findByEmail(email: string): Promise<User> {
+    return await this.userRepository.findOne({ email });
   }
 
   public generateJWT(user: User) {
-    let today = new Date();
-    let exp = new Date(today);
+    const today = new Date();
+    const exp = new Date(today);
     exp.setDate(today.getDate() + 60);
 
     return jwt.sign({
@@ -124,16 +123,5 @@ export class UsersService {
       email: user.email,
       exp: exp.getTime() / 1000,
     }, SECRET);
-  };
-
-  private buildUserRO(user: User): {user: UserInterface} {
-
-    return {
-      user: {
-        firstName: user.firstName,
-        email: user.email,
-        token: this.generateJWT(user),
-      }
-    };
   }
 }

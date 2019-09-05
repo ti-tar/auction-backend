@@ -14,10 +14,11 @@ import { VadationPipe } from '../common/validation.pipe';
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
-  @Get('user')
-  async findMe(@UserJWT('email') email: string): Promise<UserInterface> {
-    return await this.userService.findByEmail(email);
-  }
+  // @Get('user')
+  // async findMe(@UserJWT('email') email: string): Promise<UserInterface> {
+  //   const user = await this.userService.findByEmail(email);
+  //   return this.buildUserResponseObject(user);
+  // }
 
   @Put('user')
   async update(@UserJWT('id') userId: number, @Body('user') userData: UpdateUserDto) {
@@ -27,7 +28,8 @@ export class UsersController {
   @UsePipes(new VadationPipe())
   @Post()
   async create(@Body() userData: CreateUserDto) {
-    return this.userService.create(userData);
+    const savedUser = await this.userService.create(userData);
+    return this.buildUserResponseObject(savedUser);
   }
 
   @Delete('users/:slug')
@@ -37,12 +39,9 @@ export class UsersController {
 
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
-    // console.log('loginUserDto');
-    // console.log(loginUserDto);
+    
     const user = await this.userService.findOne(loginUserDto);
 
-    // console.log('user');
-    // console.log(user);
     if (!user){
       throw new HttpException([{message: `Email or password are incorrect, or you are unregistered yet.`}], HttpStatus.UNAUTHORIZED);
     }
@@ -54,6 +53,17 @@ export class UsersController {
     return {
       resource: { id, email, firstName, token },
       meta: {}
+    };
+  }
+
+  private buildUserResponseObject(user: User): {user: UserInterface} {
+    return {
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        email: user.email,
+        token: this.userService.generateJWT(user),
+      }
     };
   }
 }
