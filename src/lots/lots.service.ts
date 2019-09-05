@@ -6,7 +6,6 @@ import { Lot } from '../entities/lot';
 import { CreateLotDto } from './create-lot.dto';
 import { UpdateLotDto } from './update-lot.dto';
 import { User } from '../entities/user';
-import { async } from 'rxjs/internal/scheduler/async';
 
 @Injectable()
 export class LotsService {
@@ -15,27 +14,27 @@ export class LotsService {
   ) {}
 
   async findAll(): Promise<Lot[]> {
-    return await this.lotsRepository.find({
+    return this.lotsRepository.find({
       relations: ['user']
     });
   }
 
   async findAllByUserId(id: number): Promise<Lot[]> {
-    return await this.lotsRepository.find({ 
-      where: {user: { id: id }},
+    return this.lotsRepository.find({ 
+      where: {user: { id }},
       relations: ['user'],
     });
   }
 
   async find(id: number): Promise<Lot> {
-    return await this.lotsRepository.findOne(
+    return this.lotsRepository.findOne(
       { where: {id}, relations: ['user'] }
     );
   }
 
   async update(lotRequest: CreateLotDto, lotId: number) {
 
-    const moment = require("moment");
+    const moment = require('moment');
 
     const {
       title, image, description, currentPrice, 
@@ -44,31 +43,31 @@ export class LotsService {
 
     const updatedLot = await this.lotsRepository.update(lotId, 
       { 
-        title: title,
-        image: image,
-        description: description,
-        currentPrice: currentPrice,
-        estimatedPrice: estimatedPrice,
+        title,
+        image,
+        description,
+        currentPrice,
+        estimatedPrice,
         startTime: moment(startTime),
         endTime: moment(endTime),
       }
     );
 
-    return await this.lotsRepository.findOne(lotId);
+    return this.lotsRepository.findOne(lotId);
   }
 
 
   async delete(lotId: number) {
-    return await this.lotsRepository.delete(lotId);
+    return this.lotsRepository.delete(lotId);
   }
 
   async create(lotRequest: CreateLotDto, user: User ) {
     
-    const moment = require("moment");
+    const moment = require('moment');
 
     const { title, image, description, currentPrice, estimatedPrice, startTime, endTime } = lotRequest;
 
-    let newLot = new Lot();
+    const newLot = new Lot();
     newLot.title = title;
     newLot.image = image;
     newLot.description = description;
