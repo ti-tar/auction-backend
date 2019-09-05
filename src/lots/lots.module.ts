@@ -38,25 +38,36 @@ export class LotsModule implements NestModule {
           path: 'lots/own',
           method: RequestMethod.GET
         },
+        // get lot by id
         {
           path: 'lots/:id',
           method: RequestMethod.GET
         },
+        // lot create
         {
-          path: 'lots/:id/bids',
+          path: 'lots',
+          method: RequestMethod.POST
+        },
+        // lot update
+        {
+          path: 'lots/:lotId',
+          method: RequestMethod.PUT
+        },
+        // lot delete
+        {
+          path: 'lots/:lotId',
+          method: RequestMethod.DELETE
+        }, 
+
+        // bids list by id
+        {
+          path: 'lots/:lotId/bids',
           method: RequestMethod.GET
         },
+        // bids add new bid
         {
-          path: 'lots/:id/bids',
+          path: 'lots/:lotId/bids',
           method: RequestMethod.POST
-        },
-        {
-          path: 'lots',
-          method: RequestMethod.POST
-        },
-        {
-          path: 'lots',
-          method: RequestMethod.PUT
         }
       )
   }

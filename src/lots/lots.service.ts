@@ -6,6 +6,7 @@ import { Lot } from '../entities/lot';
 import { CreateLotDto } from './create-lot.dto';
 import { UpdateLotDto } from './update-lot.dto';
 import { User } from '../entities/user';
+import { async } from 'rxjs/internal/scheduler/async';
 
 @Injectable()
 export class LotsService {
@@ -28,37 +29,37 @@ export class LotsService {
 
   async find(id: number): Promise<Lot> {
     return await this.lotsRepository.findOne(
-      { where: {id}, relations: ['user']}
+      { where: {id}, relations: ['user'] }
     );
   }
 
-  async update(lotRequest: UpdateLotDto) {
+  async update(lotRequest: CreateLotDto, lotId: number) {
 
     const moment = require("moment");
 
-    const { 
-      id, title, image, description, currentPrice, 
+    const {
+      title, image, description, currentPrice, 
       estimatedPrice, startTime, endTime 
     } = lotRequest;
 
-    const updatedLot = await getConnection()
-    .createQueryBuilder()
-    .update(Lot)
-    .set({ 
-      title: title,
-      image: image,
-      description: description,
-      currentPrice: currentPrice,
-      estimatedPrice: estimatedPrice,
-      startTime: moment(startTime),
-      endTime: moment(endTime),
-    })
-    .where("id = :id", { id })
-    .execute();
+    const updatedLot = await this.lotsRepository.update(lotId, 
+      { 
+        title: title,
+        image: image,
+        description: description,
+        currentPrice: currentPrice,
+        estimatedPrice: estimatedPrice,
+        startTime: moment(startTime),
+        endTime: moment(endTime),
+      }
+    );
 
-    // console.log(updatedLot); 
+    return await this.lotsRepository.findOne(lotId);
+  }
 
-    return updatedLot;
+
+  async delete(lotId: number) {
+    return await this.lotsRepository.delete(lotId);
   }
 
   async create(lotRequest: CreateLotDto, user: User ) {

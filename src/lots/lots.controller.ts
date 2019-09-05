@@ -1,5 +1,6 @@
 import { 
-  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Request, UseInterceptors, ClassSerializerInterceptor
+  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete, Request, 
+  UseInterceptors, ClassSerializerInterceptor
 } from '@nestjs/common';
 
 import { Transform } from 'class-transformer';
@@ -14,7 +15,8 @@ import { VadationPipe } from '../common/validation.pipe';
 import { CreateLotDto } from './create-lot.dto';
 import { CreateBidDto } from './create-bid.dto';
 import { UpdateLotDto } from './update-lot.dto';
-
+import { async } from 'rxjs/internal/scheduler/async';
+import { DeleteResult } from 'typeorm';
 
 
 interface LotsResponse {
@@ -53,10 +55,10 @@ export class LotsController {
     };
   }
 
-  @Get(':id')
-  async find(@Param('id') id: number): Promise<LotResponse> {
+  @Get(':lotId')
+  async find(@Param('lotId') lotId: number): Promise<LotResponse> {
 
-    const lot: Lot =  await this.lotsService.find(id);
+    const lot: Lot =  await this.lotsService.find(lotId);
     return {
       resource: lot, 
       meta: {} 
@@ -64,12 +66,24 @@ export class LotsController {
   }
 
   @UsePipes(new VadationPipe())
-  @Put(':id')
-  async update(@Body() lotData: UpdateLotDto): Promise<any> {
+  @Put(':lotId')
+  async update(@Param('lotId') lotId: number, @Body() lotData: CreateLotDto): Promise<LotResponse> {
+
+    // todo validation check jwt user id  === lot creator id
+
+    const updatedLot = await this.lotsService.update(lotData, lotId);
+
     return {
-      resource: await this.lotsService.update(lotData), 
-      meta: {} 
+      resource: updatedLot, 
+      meta: {}
     };
+  }
+
+  @Delete(':lotId')
+  async delete(@Param('lotId') lotId: number): Promise<DeleteResult> {
+    const resp = await this.lotsService.delete(lotId);
+    console.log(resp);
+    return resp;
   }
 
   @UsePipes(new VadationPipe())
@@ -84,6 +98,7 @@ export class LotsController {
     };
   }
 
+  
   @Get(':lotId/bids')
   async findBidsById(@Param('lotId') lotId: number): Promise<any> {
 
