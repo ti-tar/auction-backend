@@ -1,14 +1,14 @@
 import { IsString, IsNumber, IsDateString, IsEnum } from 'class-validator';
-import { Status } from '../entities/lot';
+// import { Status } from '../entities/lot';
 
 export class CreateLotDto {
-  @IsString() 
+  @IsString()
   readonly title: string;
 
-  @IsString() 
+  @IsString()
   readonly image?: string;
- 
-  @IsString() 
+
+  @IsString()
   readonly description?: string;
 
   // @IsEnum(Status)

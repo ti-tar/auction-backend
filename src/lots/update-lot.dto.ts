@@ -1,17 +1,17 @@
 import { IsString, IsNumber, IsDateString } from 'class-validator';
 
 export class UpdateLotDto {
-  
+
   @IsNumber()
   readonly id: string;
 
-  @IsString() 
+  @IsString()
   readonly title: string;
 
-  @IsString() 
+  @IsString()
   readonly image?: string;
- 
-  @IsString() 
+
+  @IsString()
   readonly description?: string;
 
   @IsNumber()

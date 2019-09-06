@@ -1,6 +1,5 @@
-import { 
-  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete, Request, 
-  UseInterceptors, ClassSerializerInterceptor
+import {
+  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete, Request,
 } from '@nestjs/common';
 
 import { Transform } from 'class-transformer';
@@ -17,30 +16,29 @@ import { CreateBidDto } from './create-bid.dto';
 import { UpdateLotDto } from './update-lot.dto';
 import { DeleteResult } from 'typeorm';
 
-
 interface LotsResponse {
-  resources: Lot[],
-  meta: object,
+  resources: Lot[];
+  meta: object;
 }
 
 interface LotResponse {
-  resource: Lot,
-  meta: object,
+  resource: Lot;
+  meta: object;
 }
 
 @Controller('lots')
 export class LotsController {
   constructor(
     private readonly lotsService: LotsService,
-    private readonly bidService: BidsService
+    private readonly bidService: BidsService,
   ) {}
 
   @Get()
   async findAll(): Promise<LotsResponse> {
     const lots = await this.lotsService.findAll();
-    return { 
-      resources: lots, 
-      meta: {} 
+    return {
+      resources: lots,
+      meta: {},
     };
   }
 
@@ -48,9 +46,9 @@ export class LotsController {
   async findOwnAll(@Req() request: { [key: string]: any }): Promise<LotsResponse> {
     const { user } = request;
     const lots = await this.lotsService.findAllByUserId(user.id);
-    return { 
-      resources: lots, 
-      meta: {} 
+    return {
+      resources: lots,
+      meta: {},
     };
   }
 
@@ -59,8 +57,8 @@ export class LotsController {
 
     const lot: Lot =  await this.lotsService.find(lotId);
     return {
-      resource: lot, 
-      meta: {} 
+      resource: lot,
+      meta: {},
     };
   }
 
@@ -73,15 +71,14 @@ export class LotsController {
     const updatedLot = await this.lotsService.update(lotData, lotId);
 
     return {
-      resource: updatedLot, 
-      meta: {}
+      resource: updatedLot,
+      meta: {},
     };
   }
 
   @Delete(':lotId')
   async delete(@Param('lotId') lotId: number): Promise<DeleteResult> {
     const resp = await this.lotsService.delete(lotId);
-    console.log(resp);
     return resp;
   }
 
@@ -92,12 +89,11 @@ export class LotsController {
     const { user } = request;
 
     return {
-      resource: await this.lotsService.create(lotData, user), 
-      meta: {} 
+      resource: await this.lotsService.create(lotData, user),
+      meta: {},
     };
   }
 
-  
   @Get(':lotId/bids')
   async findBidsById(@Param('lotId') lotId: number): Promise<any> {
 
@@ -105,19 +101,19 @@ export class LotsController {
     const totalBids: number = await this.bidService.getBidsCountByLotId(lotId);
 
     return {
-      resources: bids, 
+      resources: bids,
       meta: {
         total: totalBids,
-      } 
+      },
     };
   }
 
   @UsePipes(new VadationPipe())
   @Post(':lotId/bids')
   async addBid(
-    @Param('lotId') lotId: number, 
-    @Body() bidData: CreateBidDto, 
-    @Req() request: { [key: string]: any }
+    @Param('lotId') lotId: number,
+    @Body() bidData: CreateBidDto,
+    @Req() request: { [key: string]: any },
   ): Promise<any> {
 
     const { user } = request;
@@ -127,10 +123,10 @@ export class LotsController {
     // todo check lotUserId !== userId
 
     const newBid = await this.bidService.create(bidData, user, lot );
-  
+
     return {
-      resource: newBid, 
-      meta: {} 
+      resource: newBid,
+      meta: {},
     };
   }
 }

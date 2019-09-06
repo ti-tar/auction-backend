@@ -2,7 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getRepository, DeleteResult } from 'typeorm';
 import { validate } from 'class-validator';
-const jwt = require('jsonwebtoken');
+import * as jwt from 'jsonwebtoken';
 import { SECRET } from '../config';
 import { throwErrorResponse } from '../libs/errors';
 // entities
@@ -20,7 +20,7 @@ import { UserInterface } from './users.interface';
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -38,7 +38,7 @@ export class UsersService {
 
   async findOneById(id: number): Promise<User> {
     return await this.userRepository.findOne({ id });
-  };
+  }
 
   async create(createUserDto: CreateUserDto): Promise<any> {
 
@@ -51,18 +51,18 @@ export class UsersService {
       .getOne();
 
     if (user) {
-     
+
       // todo --- with DTO ???
       throw new HttpException([
         {
           property: 'email',
-          message: 'Email must be unique. Already registered.'
-        }
+          message: 'Email must be unique. Already registered.',
+        },
       ], HttpStatus.BAD_REQUEST);
     }
 
     // create new user
-    let newUser = new User();
+    const newUser = new User();
     newUser.firstName = firstName;
     newUser.lastName = lastName;
     newUser.email = email;
@@ -71,10 +71,10 @@ export class UsersService {
 
     const errors = await validate(newUser);
 
-    if (errors.length > 0){
+    if (errors.length > 0) {
       // todo --- with DTO ???
       throwErrorResponse(errors);
-    } 
+    }
 
     try {
       const savedUser = await this.userRepository.save(newUser);
@@ -86,24 +86,24 @@ export class UsersService {
   }
 
   async update(id: number, dto: UpdateUserDto): Promise<User> {
-    let toUpdate = await this.userRepository.findOne(id);
+    const toUpdate = await this.userRepository.findOne(id);
     delete toUpdate.password;
 
-    let updated = Object.assign(toUpdate, dto);
+    const updated = Object.assign(toUpdate, dto);
     return await this.userRepository.save(updated);
   }
 
   async delete(email: string): Promise<DeleteResult> {
-    return await this.userRepository.delete({ email: email});
+    return await this.userRepository.delete({ email });
   }
 
-  // async findById(id: number): Promise<any>{
+  // async findById(id: number): Promise<User> {
   //   const user = await this.userRepository.findOne(id);
 
   //   if (!user) {
   //     const errors = {User: ' not found'};
   //     throw new HttpException({errors}, 401);
-  //   };
+  //   }
 
   //   return user;
   // }

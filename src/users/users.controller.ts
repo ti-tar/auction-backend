@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Controller, Get, Post, Body, Put, Param, Use
 import { UsersService } from './users.service';
 // interface
 import { UserInterface } from './users.interface';
+import { User } from './../entities/user';
 // dto
 import { LoginUserDto } from './dto/login-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -39,10 +40,10 @@ export class UsersController {
 
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
-    
+
     const user = await this.userService.findOne(loginUserDto);
 
-    if (!user){
+    if (!user) {
       throw new HttpException([{message: `Email or password are incorrect, or you are unregistered yet.`}], HttpStatus.UNAUTHORIZED);
     }
 
@@ -52,7 +53,7 @@ export class UsersController {
 
     return {
       resource: { id, email, firstName, token },
-      meta: {}
+      meta: {},
     };
   }
 
@@ -63,7 +64,7 @@ export class UsersController {
         firstName: user.firstName,
         email: user.email,
         token: this.userService.generateJWT(user),
-      }
+      },
     };
   }
 }

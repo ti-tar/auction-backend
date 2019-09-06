@@ -4,22 +4,22 @@ import { Bid } from './bid';
 enum TypeStatus {
   royal_mail = 'Royal Mail',
   united_states_postal_service = 'United States Postal Service',
-  dhl_expres = 'DHL Express'
-};
+  dhl_expres = 'DHL Express',
+}
 
 enum Status {
   pending = 'pending',
   sent = 'sent',
-  delivered = 'delivered'
-};
+  delivered = 'delivered',
+}
 
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'text', nullable: true })
-  arrival_location: string;
+  @Column({name: 'arrival_location', type: 'text', nullable: true })
+  arrivalLocation: string;
 
   @Column({type: 'enum', enum: TypeStatus})
   type: string;

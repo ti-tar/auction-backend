@@ -21,54 +21,52 @@ import { AuthMiddleware } from '../auth/auth.middleware';
     BidsService,
   ],
   controllers: [
-    LotsController
+    LotsController,
   ],
 })
-
 export class LotsModule implements NestModule {
-  configure (customMiddlware: MiddlewareConsumer) {
+  configure(customMiddlware: MiddlewareConsumer) {
     customMiddlware
-      .apply(AuthMiddleware)
-      .forRoutes(
-        {
-          path: 'lots',
-          method: RequestMethod.GET
-        },
-        {
-          path: 'lots/own',
-          method: RequestMethod.GET
-        },
-        // get lot by id
-        {
-          path: 'lots/:id',
-          method: RequestMethod.GET
-        },
-        // lot create
-        {
-          path: 'lots',
-          method: RequestMethod.POST
-        },
-        // lot update
-        {
-          path: 'lots/:lotId',
-          method: RequestMethod.PUT
-        },
-        // lot delete
-        {
-          path: 'lots/:lotId',
-          method: RequestMethod.DELETE
-        }, 
-
-        // bids list by id
-        {
-          path: 'lots/:lotId/bids',
-          method: RequestMethod.GET
-        },
-        // bids add new bid
-        {
-          path: 'lots/:lotId/bids',
-          method: RequestMethod.POST
-        }
-      )
+    .apply(AuthMiddleware)
+    .forRoutes(
+      {
+        path: 'lots',
+        method: RequestMethod.GET,
+      },
+      {
+        path: 'lots/own',
+        method: RequestMethod.GET,
+      },
+      // get lot by id
+      {
+        path: 'lots/:id',
+        method: RequestMethod.GET,
+      },
+      // lot create
+      {
+        path: 'lots',
+        method: RequestMethod.POST,
+      },
+      // lot update
+      {
+        path: 'lots/:lotId',
+        method: RequestMethod.PUT,
+      },
+      // lot delete
+      {
+        path: 'lots/:lotId',
+        method: RequestMethod.DELETE,
+      },
+      // bids list by id
+      {
+        path: 'lots/:lotId/bids',
+        method: RequestMethod.GET,
+      },
+      // bids add new bid
+      {
+        path: 'lots/:lotId/bids',
+        method: RequestMethod.POST,
+      },
+    );
   }
 }
