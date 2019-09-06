@@ -1,5 +1,4 @@
-import { HttpException } from '@nestjs/common';
-import { NestMiddleware, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, NestMiddleware, HttpStatus, Injectable } from '@nestjs/common';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';

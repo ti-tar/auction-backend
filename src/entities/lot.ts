@@ -4,14 +4,13 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { User } from './user';
 import { Bid } from './bid';
 
-
 // const moment = require("moment");
 
 export enum Status {
   pending = 'pending',
   inProcess = 'inProcess',
-  closed = 'closed'
-};
+  closed = 'closed',
+}
 
 @Entity('lots')
 export class Lot {

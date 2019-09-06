@@ -12,7 +12,7 @@ export class Bid {
 
   @Column({ name: 'proposed_price' })
   proposedPrice: number;
-  
+
   @ManyToOne(type => User, user => user.bids)
   user: User;
 

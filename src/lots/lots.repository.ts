@@ -6,5 +6,5 @@ import { LotDto } from './lot.interface';
 export class LotRepository extends Repository<Lot> {
   createLot = async (lotDto: LotDto) => {
     return await this.save(lotDto);
-  };
+  }
 }
