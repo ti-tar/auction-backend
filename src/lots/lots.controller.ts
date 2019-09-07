@@ -1,8 +1,8 @@
 import {
-  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete, Request,
+  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete, Request, UseInterceptors, UploadedFile,
 } from '@nestjs/common';
-
-import { Transform } from 'class-transformer';
+import { FileInterceptor, MulterModule } from '@nestjs/platform-express';
+import * as multer from 'multer';
 
 import { LotsService } from './lots.service';
 import { BidsService } from './bids.service';
@@ -128,5 +128,15 @@ export class LotsController {
       resource: newBid,
       meta: {},
     };
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadFile(@UploadedFile() file: any) {
+    // console.log(file);
+    const upload = multer({
+      dest: './upload',
+    });
+    // console.log(upload.single('file'));
   }
 }

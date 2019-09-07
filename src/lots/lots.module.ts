@@ -67,6 +67,11 @@ export class LotsModule implements NestModule {
         path: 'lots/:lotId/bids',
         method: RequestMethod.POST,
       },
+      // upload image
+      // {
+      //   path: 'lots/upload',
+      //   method: RequestMethod.POST,
+      // },
     );
   }
 }
