@@ -16,6 +16,8 @@ import { CreateBidDto } from './create-bid.dto';
 import { UpdateLotDto } from './update-lot.dto';
 import { DeleteResult } from 'typeorm';
 
+import { extname } from 'path';
+
 interface LotsResponse {
   resources: Lot[];
   meta: object;
@@ -131,12 +133,16 @@ export class LotsController {
   }
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(@UploadedFile() file: any) {
-    // console.log(file);
-    const upload = multer({
-      dest: './upload',
-    });
-    // console.log(upload.single('file'));
+  @UseInterceptors(FileInterceptor('file', {
+    storage: multer.diskStorage({
+      destination: './upload/lots',
+      filename: (req, file, cb) => {
+        const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
+        return cb(null, `${randomName}${extname(file.originalname)}`);
+      },
+    }),
+  }))
+  uploadFile(@UploadedFile() file: any): any {
+    return { fileName: file.filename };
   }
 }
