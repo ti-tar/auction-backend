@@ -3,6 +3,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor, MulterModule } from '@nestjs/platform-express';
 import * as multer from 'multer';
+import * as sharp from 'sharp';
+import * as fs from 'fs';
 
 import { LotsService } from './lots.service';
 import { BidsService } from './bids.service';
@@ -142,7 +144,19 @@ export class LotsController {
       },
     }),
   }))
-  uploadFile(@UploadedFile() file: any): any {
+  async uploadFile(@UploadedFile() file: any): Promise<{ fileName: string }> {
+    // resize image to 200px width with sharp
+    const filePath: string = file.path;
+    const imageResult = await sharp(filePath)
+    .resize(200)
+    .toBuffer()
+    .then((data: any) => {
+      fs.writeFileSync(file.fileName, data);
+    })
+    .catch( () => {
+      // throw new HttpException({ message: 'Error occurred during handling image.'}, HttpStatus.BAD_REQUEST);
+    });
+
     return { fileName: file.filename };
   }
 }
