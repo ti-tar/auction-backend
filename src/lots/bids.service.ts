@@ -41,9 +41,19 @@ export class BidsService {
     newbid.user = user;
     newbid.lot = lot;
 
+    console.log('---user');
+    console.log(user);
+
+    console.log('---newbid');
+    console.log(newbid);
+
+
     // todo validation !!!
 
     const savedBid = await this.bidsRepository.save(newbid);
+
+    console.log('---savedBid');
+    console.log(savedBid);
 
     return savedBid;
   }

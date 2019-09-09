@@ -1,5 +1,6 @@
 import {
-  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete, Request, UseInterceptors, UploadedFile,
+  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete, Request,
+  UseInterceptors, UploadedFile, HttpStatus, HttpException,
 } from '@nestjs/common';
 import { FileInterceptor, MulterModule } from '@nestjs/platform-express';
 import * as multer from 'multer';
@@ -27,6 +28,11 @@ interface LotsResponse {
 
 interface LotResponse {
   resource: Lot;
+  meta: object;
+}
+
+interface BidResponse {
+  resource: Bid;
   meta: object;
 }
 
@@ -118,13 +124,21 @@ export class LotsController {
     @Param('lotId') lotId: number,
     @Body() bidData: CreateBidDto,
     @Req() request: { [key: string]: any },
-  ): Promise<any> {
+  ): Promise<BidResponse> {
 
     const { user } = request;
 
     const lot: Lot = await this.lotsService.find(lotId);
 
     // todo check lotUserId !== userId
+
+    if (!lot) {
+      throw new HttpException([{message: 'Lot info error'}], HttpStatus.BAD_REQUEST);
+    }
+
+    if (!user) {
+      throw new HttpException([{message: 'User auth error.'}], HttpStatus.UNAUTHORIZED);
+    }
 
     const newBid = await this.bidService.create(bidData, user, lot );
 
@@ -137,7 +151,7 @@ export class LotsController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file', {
     storage: multer.diskStorage({
-      destination: './upload/lots',
+      destination: './upload/images/lots',
       filename: (req, file, cb) => {
         const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
         return cb(null, `${randomName}${extname(file.originalname)}`);
@@ -145,18 +159,19 @@ export class LotsController {
     }),
   }))
   async uploadFile(@UploadedFile() file: any): Promise<{ fileName: string }> {
-    // resize image to 200px width with sharp
+    // make thumb from uploaded, resize image to 200px width with sharp
     const filePath: string = file.path;
+    const fileName: string = file.filename;
+    const fullPath: string = `upload/images/lots/thumb/${fileName}`;
     const imageResult = await sharp(filePath)
     .resize(200)
-    .toBuffer()
-    .then((data: any) => {
-      fs.writeFileSync(file.fileName, data);
-    })
-    .catch( () => {
-      // throw new HttpException({ message: 'Error occurred during handling image.'}, HttpStatus.BAD_REQUEST);
+    .toFile(fullPath, (err: any, info: any) => {
+      if (err) {
+        throw new HttpException({ message: err}, HttpStatus.BAD_REQUEST);
+      }
+
     });
 
-    return { fileName: file.filename };
+    return { fileName };
   }
 }
