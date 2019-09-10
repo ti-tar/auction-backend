@@ -9,7 +9,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 // decorator
 import { UserJWT } from './user.decorator';
-import { VadationPipe } from '../common/validation.pipe';
+import { VadationPipe } from '../pipes/validation.pipe';
 
 @Controller('users')
 export class UsersController {

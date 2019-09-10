@@ -1,15 +1,18 @@
-import { Injectable, Request } from '@nestjs/common';
+import { Injectable, Request, UsePipes } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getConnection } from 'typeorm';
 import * as moment from 'moment';
-//
 
+//
 import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
 
 // DTO's
-import { CreateBidDto } from './create-bid.dto';
+import { CreateBidDto } from './dto/create-bid.dto';
 import { User } from '../entities/user';
+
+// 
+import { BidEditValidation } from '../pipes/bid-edit.validation.pipe';
 
 @Injectable()
 export class BidsService {
@@ -41,19 +44,9 @@ export class BidsService {
     newbid.user = user;
     newbid.lot = lot;
 
-    console.log('---user');
-    console.log(user);
-
-    console.log('---newbid');
-    console.log(newbid);
-
-
     // todo validation !!!
 
     const savedBid = await this.bidsRepository.save(newbid);
-
-    console.log('---savedBid');
-    console.log(savedBid);
 
     return savedBid;
   }

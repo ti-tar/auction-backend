@@ -10,6 +10,8 @@ export class VadationPipe implements PipeTransform<any> {
 
     const { metatype } = metadata;
 
+    console.log(value);
+
     if (!metadata || !this.toValidate(metadata)) {
       return value;
     }

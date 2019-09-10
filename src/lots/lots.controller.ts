@@ -12,11 +12,14 @@ import { BidsService } from './bids.service';
 
 import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
+// pipes
+import { VadationPipe } from '../pipes/validation.pipe';
+import { LotEditValidation } from '../pipes/lot-edit.validation.pipe';
+import { BidEditValidation } from '../pipes/bid-edit.validation.pipe';
 
-import { VadationPipe } from '../common/validation.pipe';
-import { CreateLotDto } from './create-lot.dto';
-import { CreateBidDto } from './create-bid.dto';
-import { UpdateLotDto } from './update-lot.dto';
+// dto
+import { CreateLotDto } from './dto/create-lot.dto';
+import { CreateBidDto } from './dto/create-bid.dto';
 import { DeleteResult } from 'typeorm';
 
 import { extname } from 'path';
@@ -72,12 +75,11 @@ export class LotsController {
     };
   }
 
-  @UsePipes(new VadationPipe())
+  @UsePipes(new VadationPipe(), new LotEditValidation())
   @Put(':lotId')
   async update(@Param('lotId') lotId: number, @Body() lotData: CreateLotDto): Promise<LotResponse> {
 
     // todo validation check jwt user id  === lot creator id
-
     const updatedLot = await this.lotsService.update(lotData, lotId);
 
     return {
@@ -92,7 +94,7 @@ export class LotsController {
     return resp;
   }
 
-  @UsePipes(new VadationPipe())
+  @UsePipes(new VadationPipe(), new LotEditValidation())
   @Post()
   async create(@Body() lotData: CreateLotDto, @Req() request: { [key: string]: any }): Promise<LotResponse> {
 
@@ -118,7 +120,7 @@ export class LotsController {
     };
   }
 
-  @UsePipes(new VadationPipe())
+  @UsePipes(new BidEditValidation())
   @Post(':lotId/bids')
   async addBid(
     @Param('lotId') lotId: number,
@@ -169,7 +171,6 @@ export class LotsController {
       if (err) {
         throw new HttpException({ message: err}, HttpStatus.BAD_REQUEST);
       }
-
     });
 
     return { fileName };
