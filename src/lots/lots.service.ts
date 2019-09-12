@@ -4,7 +4,6 @@ import { Repository, getConnection } from 'typeorm';
 import { Lot } from '../entities/lot';
 // DTO's
 import { CreateLotDto } from './dto/create-lot.dto';
-import { UpdateLotDto } from './update-lot.dto';
 import { User } from '../entities/user';
 
 @Injectable()

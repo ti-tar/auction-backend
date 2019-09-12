@@ -10,7 +10,7 @@ export class BidEditValidation implements PipeTransform<any, any> {
 
     const { proposedPrice } = value;
 
-    console.log(proposedPrice);
+    // console.log(proposedPrice);
 
     throw new HttpException([{
       message: '123 123 12',
