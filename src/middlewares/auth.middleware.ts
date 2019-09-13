@@ -11,17 +11,18 @@ export class AuthMiddleware implements NestMiddleware {
   constructor(private readonly usersService: UsersService) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    const opts: StrategyOptions = {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: SECRET,
-    };
+    // const opts: StrategyOptions = {
+    //   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    //   secretOrKey: SECRET,
+    // };
 
-    passport.use(
-      new Strategy(opts, (jwtPayload, done) => {
-        console.log(jwtPayload);
-        console.log(jwtPayload.sub);
-      })
-    );
+    // passport.use(
+    //   new Strategy(opts, (jwtPayload, done) => {
+    //     console.log(jwtPayload);
+    //     console.log(jwtPayload.sub);
+    //   })
+    // );
+
     const authHeaders = req.headers.authorization;
     if (authHeaders && (authHeaders as string).split(' ')[1]) {
       const token = (authHeaders as string).split(' ')[1];

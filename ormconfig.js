@@ -26,7 +26,7 @@ module.exports = {
     username: process.env.POSTGRES_USERNAME,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DATABASE,
-    namingStrategy: new SnakeNamingStrategy(),
+    namingStrategy: new SnakeNamingStrategy(), 
     entities: [
         "src/entities/**{.ts,.js}",
     ],

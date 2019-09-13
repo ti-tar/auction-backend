@@ -4,9 +4,10 @@ import { AppModule } from './app.module';
 import { join } from 'path';
 import { NestExpressApplication, ExpressAdapter } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
-// 
-import { SharedModule } from './shared/share.module';
-import { ConfigService } from './shared/config.service';
+
+//
+import { SharedModule } from './config/share.module';
+import { ConfigService } from './config/config.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -24,7 +25,6 @@ async function bootstrap() {
 
   const configService = app.select(SharedModule).get(ConfigService);
 
-  console.log(configService.getNumber('PORT'));
 
   app.setGlobalPrefix('api');
 

@@ -21,50 +21,13 @@ export class UsersController {
   //   return this.buildUserResponseObject(user);
   // }
 
-  @Put('user')
-  async update(@UserJWT('id') userId: number, @Body('user') userData: UpdateUserDto) {
-    return await this.userService.update(userId, userData);
-  }
-
-  @UsePipes(new VadationPipe())
-  @Post()
-  async create(@Body() userData: CreateUserDto) {
-    const savedUser = await this.userService.create(userData);
-    return this.buildUserResponseObject(savedUser);
-  }
+  // @Put('user')
+  // async update(@UserJWT('id') userId: number, @Body('user') userData: UpdateUserDto) {
+  //   return await this.userService.update(userId, userData);
+  // }
 
   @Delete('users/:slug')
   async delete(@Param() params) {
     return await this.userService.delete(params.slug);
-  }
-
-  @Post('login')
-  async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
-
-    const user = await this.userService.findOne(loginUserDto);
-
-    if (!user) {
-      throw new HttpException([{message: `Email or password are incorrect, or you are unregistered yet.`}], HttpStatus.UNAUTHORIZED);
-    }
-
-    const token = await this.userService.generateJWT(user);
-
-    const {id, email, firstName } = user;
-
-    return {
-      resource: { id, email, firstName, token },
-      meta: {},
-    };
-  }
-
-  private buildUserResponseObject(user: User): {user: UserInterface} {
-    return {
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        email: user.email,
-        token: this.userService.generateJWT(user),
-      },
-    };
   }
 }

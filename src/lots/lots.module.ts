@@ -11,7 +11,7 @@ import { UsersService } from '../users/users.service';
 import { BidsService } from '../lots/bids.service';
 
 // middleware
-import { AuthMiddleware } from '../auth/auth.middleware';
+import { AuthMiddleware } from '../middlewares/auth.middleware';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Lot, User, Bid])],
@@ -24,6 +24,7 @@ import { AuthMiddleware } from '../auth/auth.middleware';
     LotsController,
   ],
 })
+
 export class LotsModule implements NestModule {
   configure(customMiddlware: MiddlewareConsumer) {
     customMiddlware
