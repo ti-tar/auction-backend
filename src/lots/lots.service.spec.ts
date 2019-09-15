@@ -11,25 +11,25 @@ type MockType<T> = {
 const mockedLots = [
   {
     id: 1,
-    title: 'Lot 1'
+    title: 'Lot 1',
   },
   {
     id: 2,
-    title: 'Lot 2'
+    title: 'Lot 2',
   },
   {
     id: 3,
-    title: 'Lot 3'
+    title: 'Lot 3',
   },
   {
     id: 4,
-    title: 'Lot 4'
+    title: 'Lot 4',
   },
 ];
 
 const mockedLot = {
   id: 123,
-  title: 'Lot 123'
+  title: 'Lot 123',
 };
 
 const repositoryMockFactory = jest.fn(() => ({
@@ -38,7 +38,7 @@ const repositoryMockFactory = jest.fn(() => ({
 }));
 
 describe('Lots Service', () => {
-  let service: LotsService;
+  let lotService: LotsService;
   let repositoryMock: MockType<Repository<Lot>>;
 
   beforeEach(async () => {
@@ -46,26 +46,33 @@ describe('Lots Service', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LotsService,
-        { 
-          provide: getRepositoryToken(Lot), 
-          useFactory: repositoryMockFactory 
+        {
+          provide: getRepositoryToken(Lot),
+          useFactory: repositoryMockFactory,
         },
       ],
     }).compile();
-    
-    service = module.get<LotsService>(LotsService);
+
+    lotService = module.get<LotsService>(LotsService);
     repositoryMock = module.get(getRepositoryToken(Lot));
   });
 
   it('fetch all lots', async () => {
     repositoryMock.find.mockReturnValue(mockedLots);
-    expect(await service.findAll()).toEqual(mockedLots);
+    expect(await lotService.findAll()).toEqual(mockedLots);
   });
 
   it('fetch a lot by id', async () => {
     repositoryMock.findOne.mockReturnValue(mockedLot);
--
-    expect(await service.find(mockedLot.id)).toEqual(mockedLot);
-    expect(repositoryMock.findOne).toHaveBeenCalledWith(mockedLot.id);
+
+    expect(await lotService.find(mockedLot.id)).toEqual(mockedLot);
+    expect(repositoryMock.findOne).toHaveBeenCalledWith(
+      {
+        relations: ['user'],
+        where: {
+          id: 123,
+        },
+      },
+    );
   });
 });

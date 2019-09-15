@@ -1,7 +1,5 @@
 import {
-  Controller, UsePipes,
-  HttpException, HttpStatus,
-  Get, Post, Body, Put, Param,
+  Controller, UsePipes, Post, Body,
 } from '@nestjs/common';
 
 import { VadationPipe } from '../pipes/validation.pipe';
@@ -22,7 +20,10 @@ export class AuthController {
   @Post('singin')
   async singin(@Body() userData: CreateUserDto) {
     const savedUser = await this.authService.create(userData);
-    return this.buildUserResponseObject(savedUser);
+    return {
+      resource: this.buildUserResponseObject(savedUser),
+      meta: {},
+    };
   }
 
   @UsePipes(new VadationPipe())

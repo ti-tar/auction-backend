@@ -1,18 +1,37 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getRepository } from 'typeorm';
+// services
 import { AuthService } from './auth.service';
+import { JwtService } from '@nestjs/jwt';
+import { UsersService } from '../users/users.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '../entities/user';
 
 describe('AuthService', () => {
-  let service: AuthService;
+  let authService: AuthService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthService],
+      providers: [
+        AuthService,
+        // JwtService,
+        // UsersService,
+        // {
+        //   provide: getRepositoryToken(User),
+        //   useFactory: jest.fn(() => ({
+        //     findByEmail: jest.fn(() => 'email'),
+        //     create: jest.fn(() => 'create'),
+        //   })),
+        // },
+      ],
     }).compile();
 
-    service = module.get<AuthService>(AuthService);
+    authService = module.get<AuthService>(AuthService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+  it.todo('should be defined');
+
+  it.todo('login');
+
+  it.todo('singnin');
 });
