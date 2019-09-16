@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Controller, Get, Post, Body, Put, Param, UsePipes, Delete } from '@nestjs/common';
+import { HttpException, HttpStatus, Controller, Get, Post, Body, Put, Param, UsePipes, Delete, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 // interface
 import { UserInterface } from './users.interface';
@@ -10,6 +10,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 // decorator
 import { UserJWT } from './user.decorator';
 import { VadationPipe } from '../pipes/validation.pipe';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UsersController {

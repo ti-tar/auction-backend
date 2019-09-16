@@ -21,14 +21,17 @@ import { LocalStrategy } from './local.strategy';
 @Module({
   imports: [
     UsersModule,
-    PassportModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       secretOrPrivateKey: SECRET,
       // signOptions: { expiresIn: '60s' },
     }),
   ],
-  providers: [UsersService, AuthService, JwtStrategy, LocalStrategy],
+  providers: [
+    UsersService, AuthService,
+    JwtStrategy, LocalStrategy,
+  ],
   controllers: [AuthController],
   exports: [AuthService],
 })

@@ -13,7 +13,10 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(),
-    { cors: true },
+    {
+      cors: true,
+      // logger: console,
+    },
   );
 
   // app.useStaticAssets(join(__dirname, '..', 'upload'));

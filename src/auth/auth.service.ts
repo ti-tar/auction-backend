@@ -1,12 +1,17 @@
-import { JwtService } from '@nestjs/jwt';
-import { validate } from 'class-validator';
-import { UsersService } from '../users/users.service';
-import { User } from '../entities/user';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { throwErrorResponse } from '../libs/errors';
-import { LoginUserDto } from '../users/dto/login-user.dto';
 import { createHmac } from 'crypto';
+import { validate } from 'class-validator';
+import { User } from '../entities/user';
+
+// dto
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { LoginUserDto } from '../users/dto/login-user.dto';
+
+// services
+import { UsersService } from '../users/users.service';
+import { JwtService } from '@nestjs/jwt';
+//
+import { throwErrorResponse } from '../libs/errors';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +22,6 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userService.findByEmail(email);
-    console.log(123);
     if (user && user.password === createHmac('sha256', password).digest('hex')) {
       const { password, ...result } = user;
       return result;
@@ -25,21 +29,9 @@ export class AuthService {
     return null;
   }
 
-
   public async login(userData: LoginUserDto): Promise<User> {
-
-    const user = await this.userService.findByEmail(userData.email);
-
-    if (!user) {
-      throw new HttpException([{message: `Email or password are incorrect, or you are unregistered yet.`}], HttpStatus.UNAUTHORIZED);
-    }
-
-    return user;
+    return await this.userService.findByEmail(userData.email);
   }
-
-  // public async register(user: User): Promise<any>{
-  //     return this.userService.create(user)
-  // }
 
   async create(createUserDto: CreateUserDto): Promise<any> {
 
@@ -48,9 +40,8 @@ export class AuthService {
 
     const user = await this.userService.findByEmail(email);
 
+    // check email hasn't been registered yet
     if (user) {
-
-      // todo --- with DTO ???
       throw new HttpException([
         {
           property: 'email',
@@ -70,7 +61,6 @@ export class AuthService {
     const errors = await validate(newUser);
 
     if (errors.length > 0) {
-      // todo --- with DTO ???
       throwErrorResponse(errors);
     }
 
@@ -78,7 +68,6 @@ export class AuthService {
       const savedUser = await this.userService.create(newUser);
       return savedUser;
     } catch ( errors ) {
-      // console.log(errors);
       throw new HttpException({message: 'Error occured while saving user!'}, HttpStatus.BAD_REQUEST);
     }
   }
@@ -94,9 +83,5 @@ export class AuthService {
       email: user.email,
       exp: exp.getTime() / 1000,
     });
-  }
-
-  private async validate(userData: User): Promise<User> {
-    return await this.userService.findByEmail(userData.email);
   }
 }
