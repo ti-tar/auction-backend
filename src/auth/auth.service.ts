@@ -6,6 +6,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { throwErrorResponse } from '../libs/errors';
 import { LoginUserDto } from '../users/dto/login-user.dto';
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,17 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
+
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.userService.findByEmail(email);
+    console.log(123);
+    if (user && user.password === createHmac('sha256', password).digest('hex')) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
+  }
+
 
   public async login(userData: LoginUserDto): Promise<User> {
 

@@ -1,7 +1,7 @@
 import {
-  Controller, UsePipes, Post, Body,
+  Controller, UsePipes, Post, Body, UseGuards,
 } from '@nestjs/common';
-
+import { AuthGuard } from '@nestjs/passport'
 import { VadationPipe } from '../pipes/validation.pipe';
 //  auth service
 import { AuthService } from './auth.service';
@@ -16,8 +16,21 @@ export class AuthController {
     private  readonly  authService: AuthService,
   ) {}
 
+  @UseGuards(AuthGuard('local'))
+  @Post('login')
+  async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
+    const user = await this.authService.login(loginUserDto);
+
+    console.log(loginUserDto);
+
+    return {
+      resource: this.buildUserResponseObject(user),
+      meta: {},
+    };
+  }
+
   @UsePipes(new VadationPipe())
-  @Post('singin')
+  @Post('signin')
   async singin(@Body() userData: CreateUserDto) {
     const savedUser = await this.authService.create(userData);
     return {
@@ -26,17 +39,6 @@ export class AuthController {
     };
   }
 
-  @UsePipes(new VadationPipe())
-  @Post('login')
-  async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
-
-    const user = await this.authService.login(loginUserDto);
-
-    return {
-      resource: this.buildUserResponseObject(user),
-      meta: {},
-    };
-  }
 
   private buildUserResponseObject(user: User): UserInterface {
     return {
