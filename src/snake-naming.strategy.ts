@@ -16,11 +16,11 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy implements Naming
     }
 
     joinColumnName(relationName: string, referencedColumnName: string): string {
-        if (['user', 'bids'].includes(relationName) && referencedColumnName === 'id') {
+        // if (['user', 'bids'].includes(relationName) && referencedColumnName === 'id') {
             // throw new HttpException({ message: '233' }, HttpStatus.BAD_REQUEST);
             // todo KOCTbI/|b
-            return relationName + 'Id';
-        }
+            // return relationName + 'Id';
+        // }
         return snakeCase(relationName + '_' + referencedColumnName);
     }
 

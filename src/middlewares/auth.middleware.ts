@@ -1,5 +1,6 @@
 import { HttpException, NestMiddleware, HttpStatus, Injectable } from '@nestjs/common';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+// import { ExtractJwt, Strategy, StrategyOptions } from 'passport-jwt';
+// import  * as passport from 'passport';
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { SECRET } from '../config';
@@ -10,6 +11,17 @@ export class AuthMiddleware implements NestMiddleware {
   constructor(private readonly usersService: UsersService) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    // const opts: StrategyOptions = {
+    //   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    //   secretOrKey: SECRET,
+    // };
+    //
+    // passport.use(
+    //   new Strategy(opts,  async (jwtPayload, done) => {
+    //   }),
+    // );
+
+    // todo - REWRITE MIDDLEWARE WITH PASSPORT JWT STRATEGY
     const authHeaders = req.headers.authorization;
     if (authHeaders && (authHeaders as string).split(' ')[1]) {
       const token = (authHeaders as string).split(' ')[1];

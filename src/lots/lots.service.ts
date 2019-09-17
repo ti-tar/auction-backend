@@ -27,7 +27,7 @@ export class LotsService {
     return this.lotsRepository.findOne({
       where: {id},
       relations: ['user'],
-  });
+    });
   }
 
   async update(lotRequest: CreateLotDto, lotId: number) {

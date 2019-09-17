@@ -52,6 +52,7 @@ export class ConfigService {
     return {
       entities,
       migrations,
+      synchronize: true,
       keepConnectionAlive: true,
       type: 'postgres',
       host: this.get('POSTGRES_HOST'),

@@ -11,19 +11,19 @@ declare type MockType<T> = {
 const mockedUsers = [
   {
     id: 1,
-    title: 'Lot 1'
+    title: 'Lot 1',
   },
   {
     id: 2,
-    title: 'Lot 2'
+    title: 'Lot 2',
   },
   {
     id: 3,
-    title: 'Lot 3'
+    title: 'Lot 3',
   },
   {
     id: 4,
-    title: 'Lot 4'
+    title: 'Lot 4',
   },
 ];
 
@@ -42,8 +42,8 @@ describe('UsersService', () => {
             findOne: jest.fn(id => {
               return mockedUsers.find(user => user.id === parseInt(id, 10));
             }),
-          }))
-        }
+          })),
+        },
       ],
     }).compile();
 
