@@ -11,7 +11,7 @@ describe('Lots Controller', () => {
   let lotsController: LotsController;
 
   const mockedServiceFindAllResponse = [1, 2, 3];
-  const expectedControlelrFindAllResponse = {
+  const expectedControllerFindAllResponse = {
     meta: {},
     resources: [1, 2, 3],
   };
@@ -54,7 +54,7 @@ describe('Lots Controller', () => {
 
     /*
     it('findAll() resturns proper response', async () => {
-      expect(await lotsController.findAll()).toStrictEqual(expectedControlelrFindAllResponse);
+      expect(await lotsController.findAll()).toStrictEqual(expectedControllerFindAllResponse);
     });
     */
 

@@ -7,6 +7,11 @@ import { Bid } from './bid';
 // utils
 import { createHmac } from 'crypto';
 
+export enum Status {
+  pending = 'pending',
+  approved = 'approved',
+}
+
 @Entity('users')
 @Unique(['email', 'phone'])
 export class User {
@@ -30,6 +35,9 @@ export class User {
 
   @Column({ name: 'last_name', type: 'varchar', length: 255 })
   lastName: string;
+
+  @Column({ name: 'status', type: 'enum', enum: Status, default: 'pending'})
+  status?: string;
 
   @BeforeInsert()
   hashPassword() {
