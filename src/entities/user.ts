@@ -39,6 +39,9 @@ export class User {
   @Column({ name: 'status', type: 'enum', enum: Status, default: 'pending'})
   status?: string;
 
+  @Column({ name: 'token', type: 'varchar', length: 255, nullable: true })
+  token: string;
+
   @BeforeInsert()
   hashPassword() {
     this.password = createHmac('sha256', this.password).digest('hex');

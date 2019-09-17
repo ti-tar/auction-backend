@@ -1,18 +1,19 @@
 import { Module } from '@nestjs/common';
 import { Connection } from 'typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// controllers
 import { AppController } from './app.controller';
-// services
 import { AppService } from './app.service';
 import { ConfigService } from './config/config.service';
-// modules
 import { SharedModule } from './config/share.module';
 import { LotsModule } from './lots/lots.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtStrategy } from './auth/jwt.strategy';
 import { LocalStrategy } from './auth/local.strategy';
+import { EmailService } from './email/email.service';
+// controllers
+// services
+// modules
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { LocalStrategy } from './auth/local.strategy';
   controllers: [AppController],
   providers: [
     AppService,
+    EmailService,
   ],
 })
 

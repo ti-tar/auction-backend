@@ -3,14 +3,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { VadationPipe } from '../pipes/validation.pipe';
-import * as nodemailer from 'nodemailer';
-//  auth service
+import { randomBytes } from 'crypto';
+
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UserInterface } from '../users/users.interface';
 import { User } from '../entities/user';
 import { UsersService } from '../users/users.service';
-
+import { EmailService } from '../email/email.service';
 
 interface UserResponseObject {
   resource: UserInterface;
@@ -22,6 +22,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UsersService,
+    private readonly emailService: EmailService,
   ) {}
 
   @UseGuards(AuthGuard('local'))
@@ -38,8 +39,23 @@ export class AuthController {
   @UsePipes(new VadationPipe())
   @Post('signup')
   async singup(@Body() userData: CreateUserDto) {
-    const savedUser = await this.authService.singup(userData);
-    this.sendEmail(savedUser.email);
+    const createdUser = await this.authService.singup(userData);
+    const savedUser = await this.userService.findByEmail(createdUser.email);
+
+    const token = randomBytes(32).toString('hex');
+
+    const updatedUser = await this.userService.setToken(savedUser, token);
+
+    const verifyLink = `http://localhost:3000/users/verify?token=${encodeURIComponent(updatedUser.token)}`;
+
+    this.emailService.sendEmail( {
+      from: '"Bro Team" <from@example.com>',
+      to: savedUser.email,
+      subject: 'Letter to verify your registration',
+      text: `Hi! You receive this letter because you tried to register auction site. Your link: ${verifyLink}`,
+      html: `<h1>Hi!</h1><p>You receive this letter because you tried to register auction site.</p><p><a href="${verifyLink}">Verify email.</a></p>`,
+    });
+
     return {
       resource: this.buildUserResponseObject(savedUser),
       meta: {},
@@ -59,32 +75,5 @@ export class AuthController {
       email: user.email,
       token: this.authService.generateJWT(user),
     };
-  }
-
-  private sendEmail(email: string): void {
-    // according to https://blog.mailtrap.io/sending-emails-with-nodemailer/
-    const transport = nodemailer.createTransport({
-      host: 'smtp.mailtrap.io',
-      port: 2525,
-      auth: {
-        // todo - from env config
-        user: 'MAILTRIP_USER',
-        pass: 'MAILTRIP_PASS',
-      },
-    });
-    const mailOptions = {
-      from: '"Example Team" <from@example.com>',
-      to: 'vitalii.titarenko@brocoders.team',
-      subject: 'Nice Nodemailer test',
-      text: 'Hey there, it’s our first message sent with Nodemailer ;) ',
-      html: '<b>Hey there! </b><br> This is our first message sent with Nodemailer',
-    };
-
-    transport.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        return console.log(error);
-      }
-      console.log('Email sent: ' + info.response);
-    });
   }
 }

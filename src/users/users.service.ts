@@ -40,6 +40,11 @@ export class UsersService {
     return await this.userRepository.findOne({ id });
   }
 
+  async setToken(user: User, token): Promise<User> {
+    // todo ???
+    return this.userRepository.save({ ...user,  token });
+  }
+
   async create(user: User): Promise<User> {
     return await this.userRepository.save(user);
   }
