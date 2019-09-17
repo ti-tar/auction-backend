@@ -1,12 +1,11 @@
 import {
   Controller, UsePipes, Get, Post, Body, UseGuards, Request,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport'
+import { AuthGuard } from '@nestjs/passport';
 import { VadationPipe } from '../pipes/validation.pipe';
 //  auth service
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { LoginUserDto } from '../users/dto/login-user.dto';
 import { UserInterface } from '../users/users.interface';
 import { User } from '../entities/user';
 import { UsersService } from '../users/users.service';
@@ -33,10 +32,10 @@ export class AuthController {
     };
   }
 
-  // @UsePipes(new VadationPipe())
-  @Post('signin')
-  async singin(@Body() userData: CreateUserDto) {
-    const savedUser = await this.authService.create(userData);
+  @UsePipes(new VadationPipe())
+  @Post('signup')
+  async singup(@Body() userData: CreateUserDto) {
+    const savedUser = await this.authService.singup(userData);
     return {
       resource: this.buildUserResponseObject(savedUser),
       meta: {},

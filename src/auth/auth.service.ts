@@ -33,7 +33,7 @@ export class AuthService {
     return await this.userService.findByEmail(userData.email);
   }
 
-  async create(createUserDto: CreateUserDto): Promise<any> {
+  async singup(createUserDto: CreateUserDto): Promise<any> {
 
     // check uniqueness of username/email
     const { firstName, lastName, email, phone, password } = createUserDto;
