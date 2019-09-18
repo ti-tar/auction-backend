@@ -76,4 +76,8 @@ export class UsersService {
   async findByEmail(email: string): Promise<User> {
     return await this.userRepository.findOne({ email });
   }
+
+  async findByToken(token: string): Promise<User> {
+    return await this.userRepository.findOne({ token });
+  }
 }
