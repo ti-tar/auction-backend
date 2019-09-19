@@ -2,9 +2,15 @@ import * as dotenv from 'dotenv';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 import { SnakeNamingStrategy } from '../snake-naming.strategy';
+import { User } from '../entities/user';
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
+@Injectable()
 export class ConfigService {
-  constructor() {
+  constructor(
+    private readonly jwtService: JwtService,
+  ) {
     const nodeEnv = this.nodeEnv;
     dotenv.config({
       path: `.${nodeEnv}.env`,
@@ -29,12 +35,24 @@ export class ConfigService {
     return this.get('NODE_ENV') || 'development';
   }
 
+  generateJWT(user: User) {
+    const today = new Date();
+    const exp = new Date(today);
+    exp.setDate(today.getDate() + 60);
+
+    return this.jwtService.sign({
+      id: user.id,
+      firstName: user.firstName,
+      email: user.email,
+      exp: exp.getTime() / 1000,
+    });
+  }
+
   get typeOrmConfig(): TypeOrmModuleOptions {
     let entities = [__dirname + '/../entities/**{.ts,.js}'];
     let migrations = [__dirname + '/../migrations/**{.ts,.js}'];
 
-    if ((<any> module).hot) {
-
+    if ((<any> module).hot) {
       const entityContext = (<any> require).context('./../entities', true, /\.ts$/);
       entities = entityContext.keys().map((id) => {
         const entityModule = entityContext(id);
@@ -49,6 +67,7 @@ export class ConfigService {
         return migration;
       });
     }
+
     return {
       entities,
       migrations,

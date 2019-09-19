@@ -6,6 +6,8 @@ import { VadationPipe } from '../pipes/validation.pipe';
 import { randomBytes } from 'crypto';
 
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { ForgotUserDto } from './dto/forgot-user.dto';
+import { ResetUserDto } from './dto/reset-user.dto';
 import { UserInterface } from '../users/users.interface';
 import { User } from '../entities/user';
 import { AuthService } from './auth.service';
@@ -36,19 +38,31 @@ export class AuthController {
       throw new BadRequestException('Your email is not verified yet. Check your email and try again.');
     }
 
+    // return user.status === 'approved' ? { ...response, token: this.authService.generateJWT(user) } : response;
     return {
-      resource: this.buildUserResponseObject(user),
+      resource: {
+        id: user.id,
+        firstName: user.firstName,
+        email: user.email,
+        token: 'jwt_token',
+      },
       meta: {},
     };
   }
 
   @Post('verify_email')
-  async verifyEmail(@Body() body ): Promise<User> {
+  async verifyEmail(@Body() body): Promise<User> {
     // get by token
     const user = await this.userService.findByToken(body.token);
-    // set user status approved
-    // return updated user
-    return user;
+    // check if user exists
+    if (!user) {
+      throw new BadRequestException('Invalid token.');
+    }
+
+    return await this.userService.update(user, {
+      status: 'approved',
+      token: null,
+    });
   }
 
   @UsePipes(new VadationPipe())
@@ -59,12 +73,12 @@ export class AuthController {
 
     const token = randomBytes(32).toString('hex');
 
-    const updatedUser = await this.userService.setToken(savedUser, token);
+    const updatedUser = await this.userService.update(savedUser, { token });
 
     const verifyLink = `${this.configService.get('FRONTEND_URL')}auth/verify_email?token=${encodeURIComponent(updatedUser.token)}`;
 
     this.emailService.sendEmail( {
-      from: '"Bro Team" <from@example.com>',
+      from: 'Auction Team <from@example.com>',
       to: savedUser.email,
       subject: 'Letter to verify your registration',
       text: 'Hi! You receive this letter because you tried to register on auction site. Your link: ' + `${verifyLink}. If you didn't registered - skip this email.`,
@@ -77,13 +91,53 @@ export class AuthController {
     };
   }
 
+  @Post('forgot_password')
+  async forgotPassword(@Body() forgotData: ForgotUserDto) {
+    // check if user approved and email === body.email
+    const user = await this.userService.findByEmail(forgotData.email);
+    if (!user) {
+      throw new BadRequestException('No such email or you haven\'t been approved.');
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const updatedUser = await this.userService.update(user, { token });
+
+    const resetPassLink = `${this.configService.get('FRONTEND_URL')}auth/reset_email?token=${encodeURIComponent(token)}`;
+
+    // send an email with reset link
+    this.emailService.sendEmail( {
+      from: 'Auction Team <from@example.com>',
+      to: user.email,
+      subject: 'Email to reset password.',
+      text: 'Hi! Reset pass on auction site. Your link: ' + `${resetPassLink}`,
+      html: `<h1>Hi!</h1><p>Reset pass on auction site.</p><p><a href="${resetPassLink}">Reset email.</a></p>`,
+    });
+
+    return { message: 'Letter sent. Check your mailbox' };
+  }
+
+  @Post('reset_password')
+  async resetPassword(@Body() resetData: ResetUserDto) {
+    // check if user approved and token === body.token
+
+    console.log(resetData);
+
+    // { token:
+    //   'ef8e75d263e1cf063ec7ceeabe6f079a7a6f75d00ec79a2dc8946515ad0300ec',
+    //     password: '1234',
+    //   passwordConfirm: '1234'
+    // }
+
+    // reset password
+
+    return '';
+  }
+
   @UseGuards(AuthGuard())
   @Get('profile')
   profile(@Request() request ): User | null {
     return request.user;
   }
-
-
 
   private buildUserResponseObject(user: User): UserInterface {
     const response = {
@@ -92,6 +146,6 @@ export class AuthController {
       email: user.email,
       status: user.status,
     };
-    return user.status === 'approved' ? { ...response, token: this.authService.generateJWT(user) } : response;
+    return user.status === 'approved' ? { ...response, token: this.configService.generateJWT(user) } : response;
   }
 }

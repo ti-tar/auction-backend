@@ -15,6 +15,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import * as crypto from 'crypto';
 // interface
 import { UserInterface } from './users.interface';
+import { getPasswordsHash } from '../libs/helpers';
 
 @Injectable()
 export class UsersService {
@@ -30,7 +31,7 @@ export class UsersService {
   async findOne(loginUserDto: LoginUserDto): Promise<User> {
     const findOneOptions = {
       email: loginUserDto.email,
-      password: crypto.createHmac('sha256', loginUserDto.password).digest('hex'),
+      password: getPasswordsHash(loginUserDto.password),
     };
 
     return await this.userRepository.findOne(findOneOptions);
@@ -40,38 +41,17 @@ export class UsersService {
     return await this.userRepository.findOne({ id });
   }
 
-  async setToken(user: User, token): Promise<User> {
-    // todo ???
-    return this.userRepository.save({ ...user,  token });
+  async update(user: User, updatedData): Promise<User> {
+    return await this.userRepository.save({ ...user, ...updatedData });
   }
 
   async create(user: User): Promise<User> {
     return await this.userRepository.save(user);
   }
 
-  // todo ?
-  // async update(id: number, dto: UpdateUserDto): Promise<User> {
-  //   const toUpdate = await this.userRepository.findOne(id);
-  //   delete toUpdate.password;
-
-  //   const updated = Object.assign(toUpdate, dto);
-  //   return await this.userRepository.save(updated);
-  // }
-
   async delete(email: string): Promise<DeleteResult> {
     return await this.userRepository.delete({ email });
   }
-
-  // async findById(id: number): Promise<User> {
-  //   const user = await this.userRepository.findOne(id);
-
-  //   if (!user) {
-  //     const errors = {User: ' not found'};
-  //     throw new HttpException({errors}, 401);
-  //   }
-
-  //   return user;
-  // }
 
   async findByEmail(email: string): Promise<User> {
     return await this.userRepository.findOne({ email });

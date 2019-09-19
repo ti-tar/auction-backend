@@ -5,7 +5,7 @@ import { Lot } from './lot';
 import { Bid } from './bid';
 
 // utils
-import { createHmac } from 'crypto';
+import { getPasswordsHash } from '../libs/helpers';
 
 export enum Status {
   pending = 'pending',
@@ -44,7 +44,7 @@ export class User {
 
   @BeforeInsert()
   hashPassword() {
-    this.password = createHmac('sha256', this.password).digest('hex');
+    this.password = getPasswordsHash(this.password);
   }
 
   @OneToMany(type => Lot, lot => lot.user)

@@ -11,6 +11,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
 import { EmailService } from './../email/email.service';
+import { ConfigService } from '../config/config.service';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { EmailService } from './../email/email.service';
   providers: [
     UsersService, AuthService,
     JwtStrategy, LocalStrategy,
-    EmailService,
+    EmailService, ConfigService,
   ],
   controllers: [AuthController],
   exports: [AuthService],

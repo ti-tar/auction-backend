@@ -71,17 +71,4 @@ export class AuthService {
       throw new HttpException({message: 'Error occured while saving user!'}, HttpStatus.BAD_REQUEST);
     }
   }
-
-  public generateJWT(user: User) {
-    const today = new Date();
-    const exp = new Date(today);
-    exp.setDate(today.getDate() + 60);
-
-    return this.jwtService.sign({
-      id: user.id,
-      firstName: user.firstName,
-      email: user.email,
-      exp: exp.getTime() / 1000,
-    });
-  }
 }
