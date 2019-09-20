@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 //
 import { throwErrorResponse } from '../libs/errors';
+import { getPasswordsHash } from '../libs/helpers';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userService.findByEmail(email);
-    if (user && user.password === createHmac('sha256', password).digest('hex')) {
+    if (user && user.password === getPasswordsHash(password)) {
       const { password, ...result } = user;
       return result;
     }

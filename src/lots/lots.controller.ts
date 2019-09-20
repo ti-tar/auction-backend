@@ -1,6 +1,6 @@
 import {
   Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete, Request,
-  UseInterceptors, UploadedFile, HttpStatus, HttpException,
+  UseInterceptors, UploadedFile, HttpStatus, HttpException, UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor, MulterModule } from '@nestjs/platform-express';
 import * as multer from 'multer';
@@ -23,6 +23,7 @@ import { CreateBidDto } from './dto/create-bid.dto';
 import { DeleteResult } from 'typeorm';
 
 import { extname } from 'path';
+import { AuthGuard } from '@nestjs/passport';
 
 interface LotsResponse {
   resources: Lot[];
@@ -46,6 +47,7 @@ export class LotsController {
     private readonly bidService: BidsService,
   ) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get()
   async findAll(): Promise<LotsResponse> {
     const lots = await this.lotsService.findAll();
@@ -55,6 +57,7 @@ export class LotsController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('own')
   async findOwnAll(@Req() request: { [key: string]: any }): Promise<LotsResponse> {
     const { user } = request;
@@ -65,6 +68,7 @@ export class LotsController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(':lotId')
   async find(@Param('lotId') lotId: number): Promise<LotResponse> {
 
@@ -75,6 +79,7 @@ export class LotsController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @UsePipes(new VadationPipe(), new LotEditValidation())
   @Put(':lotId')
   async update(@Param('lotId') lotId: number, @Body() lotData: CreateLotDto): Promise<LotResponse> {
@@ -88,12 +93,14 @@ export class LotsController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':lotId')
   async delete(@Param('lotId') lotId: number): Promise<DeleteResult> {
     const resp = await this.lotsService.delete(lotId);
     return resp;
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @UsePipes(new VadationPipe(), new LotEditValidation())
   @Post()
   async create(@Body() lotData: CreateLotDto, @Req() request: { [key: string]: any }): Promise<LotResponse> {
@@ -106,6 +113,7 @@ export class LotsController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(':lotId/bids')
   async findBidsById(@Param('lotId') lotId: number): Promise<any> {
 
@@ -120,6 +128,7 @@ export class LotsController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @UsePipes(new BidEditValidation())
   @Post(':lotId/bids')
   async addBid(
@@ -150,6 +159,7 @@ export class LotsController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('upload')
   @UseInterceptors(FileInterceptor('file', {
     storage: multer.diskStorage({

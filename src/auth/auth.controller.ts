@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '../config/config.service';
+import { getPasswordsHash } from '../libs/helpers';
 
 interface UserResponseObject {
   resource: UserInterface;
@@ -44,7 +45,7 @@ export class AuthController {
         id: user.id,
         firstName: user.firstName,
         email: user.email,
-        token: 'jwt_token',
+        token: this.configService.generateJWT(user),
       },
       meta: {},
     };
@@ -81,8 +82,8 @@ export class AuthController {
       from: 'Auction Team <from@example.com>',
       to: savedUser.email,
       subject: 'Letter to verify your registration',
-      text: 'Hi! You receive this letter because you tried to register on auction site. Your link: ' + `${verifyLink}. If you didn't registered - skip this email.`,
-      html: `<h1>Hi!</h1><p>You receive this letter because you tried to register on auction site.</p><p><a href="${verifyLink}">Verify email.</a></p><p>If you didn't registered - skip this email</p>`,
+      text: 'Hi! To complete registration follow link: ' + `${verifyLink}`,
+      html: `<h1>Hi!</h1><p>To complete registration follow link:</p><p><a href="${verifyLink}">Verify email.</a></p>`,
     });
 
     return {
@@ -93,18 +94,23 @@ export class AuthController {
 
   @Post('forgot_password')
   async forgotPassword(@Body() forgotData: ForgotUserDto) {
-    // check if user approved and email === body.email
+
     const user = await this.userService.findByEmail(forgotData.email);
+
     if (!user) {
-      throw new BadRequestException('No such email or you haven\'t been approved.');
+      throw new BadRequestException('No such email.');
+    }
+
+    // check if user approved
+    if (user.status === 'pending') {
+      throw new BadRequestException('You haven\'t been approved.');
     }
 
     const token = randomBytes(32).toString('hex');
-    const updatedUser = await this.userService.update(user, { token });
-
-    const resetPassLink = `${this.configService.get('FRONTEND_URL')}auth/reset_email?token=${encodeURIComponent(token)}`;
+    await this.userService.update(user, { token });
 
     // send an email with reset link
+    const resetPassLink = `${this.configService.get('FRONTEND_URL')}auth/reset_email?token=${encodeURIComponent(token)}`;
     this.emailService.sendEmail( {
       from: 'Auction Team <from@example.com>',
       to: user.email,
@@ -118,22 +124,32 @@ export class AuthController {
 
   @Post('reset_password')
   async resetPassword(@Body() resetData: ResetUserDto) {
+
+    const { password, passwordConfirmation, token } = resetData;
+    if (!password || !passwordConfirmation || !token || (password !== passwordConfirmation)) {
+      throw new BadRequestException('Passwords not equal');
+    }
+
     // check if user approved and token === body.token
+    const user = await this.userService.findByToken(token);
 
-    console.log(resetData);
+    if (!user) {
+      throw new BadRequestException('No such user.');
+    }
 
-    // { token:
-    //   'ef8e75d263e1cf063ec7ceeabe6f079a7a6f75d00ec79a2dc8946515ad0300ec',
-    //     password: '1234',
-    //   passwordConfirm: '1234'
-    // }
+    if (user && user.status !== 'approved') {
+      throw new BadRequestException('Your account was not approved.');
+    }
 
-    // reset password
+    await this.userService.update(user, {
+      password: getPasswordsHash('password'),
+      token: null,
+    });
 
-    return '';
+    return { message: 'Password were reset successfully' };
   }
 
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   profile(@Request() request ): User | null {
     return request.user;
