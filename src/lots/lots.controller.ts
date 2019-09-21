@@ -24,6 +24,7 @@ import { DeleteResult } from 'typeorm';
 
 import { extname } from 'path';
 import { AuthGuard } from '@nestjs/passport';
+import { UsersService } from '../users/users.service';
 
 interface LotsResponse {
   resources: Lot[];
@@ -45,6 +46,7 @@ export class LotsController {
   constructor(
     private readonly lotsService: LotsService,
     private readonly bidService: BidsService,
+    private readonly userService: UsersService,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
@@ -103,7 +105,7 @@ export class LotsController {
   @UseGuards(AuthGuard('jwt'))
   @UsePipes(new VadationPipe(), new LotEditValidation())
   @Post()
-  async create(@Body() lotData: CreateLotDto, @Req() request: { [key: string]: any }): Promise<LotResponse> {
+  async create(@Body() lotData: CreateLotDto, @Req() request ): Promise<LotResponse> {
 
     const { user } = request;
 
