@@ -1,5 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { createHmac } from 'crypto';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { User } from '../entities/user';
 
@@ -9,7 +8,7 @@ import { LoginUserDto } from '../users/dto/login-user.dto';
 
 // services
 import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
+
 //
 import { throwErrorResponse } from '../libs/errors';
 import { getPasswordsHash } from '../libs/helpers';
@@ -18,14 +17,13 @@ import { getPasswordsHash } from '../libs/helpers';
 export class AuthService {
   constructor(
     private readonly userService: UsersService,
-    private readonly jwtService: JwtService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userService.findByEmail(email);
     if (user && user.password === getPasswordsHash(password)) {
-      const { password, ...result } = user;
-      return result;
+      delete user.password;
+      return user;
     }
     return null;
   }
@@ -34,22 +32,9 @@ export class AuthService {
     return await this.userService.findByEmail(userData.email);
   }
 
-  async singup(createUserDto: CreateUserDto): Promise<any> {
+  async singUp(userSignUpData: CreateUserDto & {token: string}): Promise<User> {
 
-    // check uniqueness of username/email
-    const { firstName, lastName, email, phone, password } = createUserDto;
-
-    const user = await this.userService.findByEmail(email);
-
-    // check email hasn't been registered yet
-    if (user) {
-      throw new HttpException([
-        {
-          property: 'email',
-          message: 'Email must be unique. Already registered.',
-        },
-      ], HttpStatus.BAD_REQUEST);
-    }
+    const { firstName, lastName, email, phone, password, token } = userSignUpData;
 
     // create new user
     const newUser = new User();
@@ -58,6 +43,7 @@ export class AuthService {
     newUser.email = email;
     newUser.phone = phone;
     newUser.password = password;
+    newUser.token = token;
 
     const errors = await validate(newUser);
 
@@ -66,10 +52,9 @@ export class AuthService {
     }
 
     try {
-      const savedUser = await this.userService.create(newUser);
-      return savedUser;
+      return await this.userService.create(newUser);
     } catch ( errors ) {
-      throw new HttpException({message: 'Error occured while saving user!'}, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('Error occurred while saving user!');
     }
   }
 }

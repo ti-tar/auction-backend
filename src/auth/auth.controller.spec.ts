@@ -3,8 +3,6 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '../config/config.service';
-import { JwtStrategy } from './jwt.strategy';
-import { LocalStrategy } from './local.strategy';
 import { UsersService } from '../users/users.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -12,63 +10,62 @@ import { SECRET } from '../config';
 import { User } from '../entities/user';
 import { BadRequestException } from '@nestjs/common';
 
+// mocked db users
+const mockedUserInDBData: User[] = [
+  {
+    id: 1,
+    email: 'user1@gmail.com',
+    phone: '380991234567',
+    password: 'hashed_password1',
+    firstName: 'Approved User',
+    lastName: 'lastName',
+    status: 'approved',
+    token: 'token_user_1',
+    lots: null,
+    bids: null,
+    hashPassword: null,
+  }, {
+    id: 2,
+    email: 'user2@gmail.com',
+    phone: '380991234567',
+    password: 'hashed_password2',
+    firstName: 'Pending User',
+    lastName: 'lastName',
+    status: 'pending',
+    token: 'token_user_2',
+    lots: null,
+    bids: null,
+    hashPassword: null,
+  },
+];
+
+const mockedSignedUpUser: User = {
+  id: 42,
+  email: '123123123123@gmail.com',
+  phone: '380991234567',
+  password: 'hashed_password',
+  firstName: 'user',
+  lastName: 'lastName',
+  status: 'pending',
+  token: 'token_user_42',
+  lots: null,
+  bids: null,
+  hashPassword: null,
+};
+
 // LogIn
 describe('Auth Controller. LogIn', () => {
   let authController: AuthController;
   let authService: AuthService;
 
-  // mocked login
-  const mockedUserInDB: User[] = [
-    {
-      id: 1,
-      email: 'user1@gmail.com',
-      phone: '380991234567',
-      password: 'hashed_password1',
-      firstName: 'user1',
-      lastName: 'lastName',
-      status: 'approved',
-      token: 'jwt_token',
-      lots: null,
-      bids: null,
-      hashPassword: null,
-    }, {
-      id: 2,
-      email: 'user2@gmail.com',
-      phone: '380991234567',
-      password: 'hashed_password2',
-      firstName: 'user2',
-      lastName: 'lastName',
-      status: 'pending',
-      token: 'jwt_token',
-      lots: null,
-      bids: null,
-      hashPassword: null,
-    },
-  ];
-
-  const mockedAuthServiceLoginResponse = {
-    id: mockedUserInDB[0].id,
-    firstName: mockedUserInDB[0].firstName,
-    email: mockedUserInDB[0].email,
-    token: mockedUserInDB[0].token,
-  };
-
-  const mockedAuthControllerLoginResponse = {
-    meta: {},
-    resource: mockedAuthServiceLoginResponse,
-  };
+  const mockedUserInDB: User[] = [...mockedUserInDBData];
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        PassportModule.register({ defaultStrategy: 'jwt' }),
-        JwtModule.register({
-          secretOrPrivateKey: SECRET,
-        }),
+        PassportModule, JwtModule.register({ secretOrPrivateKey: SECRET }),
       ],
-      controllers: [
-        AuthController,
-      ],
+      controllers: [AuthController],
       providers: [
         {
           provide: UsersService,
@@ -86,9 +83,7 @@ describe('Auth Controller. LogIn', () => {
             },
           }),
         },
-        EmailService,
-        AuthService,
-        JwtStrategy, LocalStrategy,
+        EmailService, AuthService,
       ],
     }).compile();
 
@@ -105,7 +100,15 @@ describe('Auth Controller. LogIn', () => {
       email: mockedUserInDB[0].email,
       password: 'password',
     }))
-      .toStrictEqual(mockedAuthControllerLoginResponse);
+      .toStrictEqual({
+        meta: {},
+        resource: {
+          id: mockedUserInDB[0].id,
+          firstName: mockedUserInDB[0].firstName,
+          email: mockedUserInDB[0].email,
+          token: mockedUserInDB[0].token,
+        },
+      });
   });
 
   it('login method throws BadRequestException if user mail not verified',  async () => {
@@ -123,58 +126,82 @@ describe('Auth Controller. LogIn', () => {
 describe('Auth Controller. SignUp', () => {
   let authController: AuthController;
   let authService: AuthService;
+  let emailService: EmailService;
 
-  // mocked login
+  const mockedUserInDB: User[] = [...mockedUserInDBData];
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        PassportModule.register({ defaultStrategy: 'jwt' }),
-        JwtModule.register({
-          secretOrPrivateKey: SECRET,
-          // signOptions: { expiresIn: '60s' },
-        }),
+        PassportModule,
+        JwtModule.register({ secretOrPrivateKey: SECRET }),
       ],
-      controllers: [
-        AuthController,
-      ],
+      controllers: [AuthController],
       providers: [
         {
           provide: AuthService,
           useFactory: () => ({
-            login: () => '',
-            create: () => '',
-            generateJWT: () => 'jwt_token',
+            singUp: jest.fn(
+              () => ({ ...mockedSignedUpUser }),
+            ),
           }),
         },
         {
           provide: UsersService,
           useFactory: () => ({
-            findAll: () => '',
-            findOne: () => '',
-            findOneById: () => '',
-            setToken: () => '',
             create: () => '',
-            delete: () => '',
-            findByEmail: () => '',
-            findByToken: () => '',
+            findByEmail: (email) => {
+              return mockedUserInDB.find(({ email: mockedEmail }) => mockedEmail === email);
+            },
           }),
         },
-        ConfigService,
-        EmailService,
-        AuthService,
-        JwtStrategy, LocalStrategy,
+        {
+          provide: EmailService,
+          useFactory: () => ({
+            sendEmail: jest.fn(() => ({})),
+          }),
+        }, ConfigService,
       ],
     }).compile();
 
     authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
+    emailService = module.get<EmailService>(EmailService);
   });
 
   it('should be defined', () => {
     expect(authController).toBeDefined();
   });
 
+  it('signed user fields must rely incoming fields.', async () => {
+    const { id, email, phone, password, firstName, lastName, status } = mockedSignedUpUser;
+    expect(await authController.singUp({ email, phone, password, firstName, lastName }))
+      .toMatchObject({
+        meta: {},
+        resource: { id, email, firstName, status },
+      });
+    });
+
+  it('BadRequestException on exist email', async () => {
+    await expect(authController.singUp({
+      email: 'user2@gmail.com',
+      phone: '380991234567',
+      password: 'hashed_password',
+      firstName: 'user',
+      lastName: 'lastName',
+    })).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('emailService.sendEmail should be called', async () => {
+    await authController.singUp({
+      email: 'some_other_email@gmail.com',
+      phone: '380991234567',
+      password: 'hashed_password',
+      firstName: 'user',
+      lastName: 'lastName',
+    });
+    expect(emailService.sendEmail).toBeCalled();
+  });
 });
 
 // VerifyEmail
@@ -182,46 +209,14 @@ describe('Auth Controller. VerifyEmail', () => {
   let authController: AuthController;
   let authService: AuthService;
 
-  // mocked login
-  const mockedUserInDB: User[] = [
-    {
-      id: 1,
-      email: 'user1@gmail.com',
-      phone: '380991234567',
-      password: 'hashed_password1',
-      firstName: 'user1',
-      lastName: 'lastName',
-      status: 'approved',
-      token: 'this_is_token_1',
-      lots: null,
-      bids: null,
-      hashPassword: null,
-    }, {
-      id: 2,
-      email: 'user2@gmail.com',
-      phone: '380991234567',
-      password: 'hashed_password2',
-      firstName: 'user2',
-      lastName: 'lastName',
-      status: 'pending',
-      token: 'this_is_token_2',
-      lots: null,
-      bids: null,
-      hashPassword: null,
-    },
-  ];
+  const mockedUserInDB: User[] = [...mockedUserInDBData];
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        PassportModule.register({ defaultStrategy: 'jwt' }),
-        JwtModule.register({
-          secretOrPrivateKey: SECRET,
-        }),
+        PassportModule, JwtModule.register({ secretOrPrivateKey: SECRET }),
       ],
-      controllers: [
-        AuthController,
-      ],
+      controllers: [AuthController],
       providers: [
         {
           provide: UsersService,
@@ -236,10 +231,7 @@ describe('Auth Controller. VerifyEmail', () => {
             },
           }),
         },
-        ConfigService,
-        EmailService,
-        AuthService,
-        JwtStrategy, LocalStrategy,
+        ConfigService, EmailService, AuthService,
       ],
     }).compile();
 
@@ -262,5 +254,106 @@ describe('Auth Controller. VerifyEmail', () => {
       token: 'invalid_token',
     };
     await expect(authController.verifyEmail(mockedBody)).rejects.toBeInstanceOf(BadRequestException);
+  });
+});
+
+// forgotPassword resetPassword
+describe('Auth Controller. forgotPassword resetPassword', () => {
+  let authController: AuthController;
+  let authService: AuthService;
+  let emailService: EmailService;
+
+  const mockedUserInDB: User[] = [...mockedUserInDBData];
+
+  beforeEach( async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        PassportModule,
+        JwtModule.register({ secretOrPrivateKey: SECRET }),
+      ],
+      controllers: [AuthController],
+      providers: [{
+          provide: UsersService,
+          useFactory: () => ({
+            findByEmail: jest.fn((email: string) => {
+              return mockedUserInDB.find(user => user.email === email);
+            }),
+            findByToken: jest.fn((token: string) => {
+              return mockedUserInDB.find(user => user.token === token);
+            }),
+            update: jest.fn((user: User, updatedData) => {
+              const existedUserIndex = mockedUserInDB.findIndex(mUser => mUser.id === user.id);
+              return existedUserIndex > -1 ?
+                { ...mockedUserInDB[existedUserIndex], ...updatedData} : { ...user, ...updatedData};
+            }),
+          }),
+        },
+        {
+          provide: EmailService,
+          useFactory: () => ({
+            sendEmail: jest.fn(() => ({})),
+          }),
+        },
+        AuthService, ConfigService,
+      ],
+    }).compile();
+
+    authController = module.get<AuthController>(AuthController);
+    authService = module.get<AuthService>(AuthService);
+    emailService = module.get<EmailService>(EmailService);
+  });
+
+  // forgotPassword
+  it('No such email.', async () => {
+    await expect(authController.forgotPassword({ email: 'not_existed_email' }))
+      .rejects
+      .toThrowError('No such email.');
+  });
+
+  it('You haven\'t been approved.', async () => {
+    await expect(authController.forgotPassword({ email: mockedUserInDB[1].email }))
+      .rejects
+      .toThrowError('You haven\'t been approved.');
+  });
+
+  it('success, emailService been called', async () => {
+    expect(await authController.forgotPassword({ email: mockedUserInDB[0].email }))
+      .toStrictEqual({ message: 'Letter sent. Check your mailbox' });
+    expect(emailService.sendEmail).toBeCalled();
+  });
+
+  // resetPassword
+  it('no such user (token)', async () => {
+    const { password } = mockedUserInDB[0];
+
+    await expect(authController.resetPassword({
+      password, passwordConfirmation: '' , token: '',
+    }))
+      .rejects
+      .toThrowError('Passwords not equal');
+
+    await expect(authController.resetPassword({
+      password, passwordConfirmation: password , token: 'invalid_token',
+    }))
+      .rejects
+      .toThrowError('No such user.');
+  });
+
+  it('account was not approved', async () => {
+    const { password, token } = mockedUserInDB[1];
+
+    await expect(authController.resetPassword({
+      password, passwordConfirmation: password, token,
+    }))
+      .rejects
+      .toThrowError('Your account was not approved.');
+  });
+
+  it('password reset successfully', async () => {
+    const { password, token } = mockedUserInDB[0];
+    expect(await authController.resetPassword({
+      password, passwordConfirmation: password, token,
+    }))
+      .toStrictEqual({ message: 'Password were reset successfully' });
   });
 });

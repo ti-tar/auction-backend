@@ -3,8 +3,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { VadationPipe } from '../pipes/validation.pipe';
-import { randomBytes } from 'crypto';
-
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { ForgotUserDto } from './dto/forgot-user.dto';
 import { ResetUserDto } from './dto/reset-user.dto';
@@ -55,6 +53,7 @@ export class AuthController {
   async verifyEmail(@Body() body): Promise<User> {
     // get by token
     const user = await this.userService.findByToken(body.token);
+
     // check if user exists
     if (!user) {
       throw new BadRequestException('Invalid token.');
@@ -68,26 +67,31 @@ export class AuthController {
 
   @UsePipes(new VadationPipe())
   @Post('signup')
-  async singup(@Body() userData: CreateUserDto) {
-    const createdUser = await this.authService.singup(userData);
-    const savedUser = await this.userService.findByEmail(createdUser.email);
+  async singUp(@Body() userSignUpData: CreateUserDto) {
 
-    const token = randomBytes(32).toString('hex');
+    // check uniqueness of username/email
+    const user = await this.userService.findByEmail(userSignUpData.email);
+    if (user) {
+      throw new BadRequestException('Email must be unique. Already registered.');
+    }
 
-    const updatedUser = await this.userService.update(savedUser, { token });
+    const createdUser = await this.authService.singUp({
+      ...userSignUpData,
+      token: this.configService.generateRandomToken(),
+    });
 
-    const verifyLink = `${this.configService.get('FRONTEND_URL')}auth/verify_email?token=${encodeURIComponent(updatedUser.token)}`;
+    const verifyLink = this.configService.getVerifyLink(createdUser.token);
 
     this.emailService.sendEmail( {
       from: 'Auction Team <from@example.com>',
-      to: savedUser.email,
+      to: createdUser.email,
       subject: 'Letter to verify your registration',
       text: 'Hi! To complete registration follow link: ' + `${verifyLink}`,
       html: `<h1>Hi!</h1><p>To complete registration follow link:</p><p><a href="${verifyLink}">Verify email.</a></p>`,
     });
 
     return {
-      resource: this.buildUserResponseObject(savedUser),
+      resource: this.buildUserResponseObject(createdUser),
       meta: {},
     };
   }
@@ -106,11 +110,12 @@ export class AuthController {
       throw new BadRequestException('You haven\'t been approved.');
     }
 
-    const token = randomBytes(32).toString('hex');
+    const token = this.configService.generateRandomToken();
+
     await this.userService.update(user, { token });
 
     // send an email with reset link
-    const resetPassLink = `${this.configService.get('FRONTEND_URL')}auth/reset_email?token=${encodeURIComponent(token)}`;
+    const resetPassLink = this.configService.getResetPasswordLink(token);
     this.emailService.sendEmail( {
       from: 'Auction Team <from@example.com>',
       to: user.email,
@@ -126,7 +131,7 @@ export class AuthController {
   async resetPassword(@Body() resetData: ResetUserDto) {
 
     const { password, passwordConfirmation, token } = resetData;
-    if (!password || !passwordConfirmation || !token || (password !== passwordConfirmation)) {
+    if (!password || !passwordConfirmation || (password !== passwordConfirmation)) {
       throw new BadRequestException('Passwords not equal');
     }
 

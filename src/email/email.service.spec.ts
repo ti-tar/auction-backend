@@ -1,18 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmailService } from './email.service';
+import { ConfigService } from '../config/config.service';
 
 describe('EmailService', () => {
-  let service: EmailService;
+  let emailService: EmailService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EmailService],
+      providers: [
+        {
+          provide: ConfigService,
+          useFactory: () => ({
+            get: jest.fn(() => ({})),
+            generateJWT: jest.fn(() => ({})),
+            typeOrmConfig: jest.fn(() => ({})),
+          }),
+        },
+        EmailService,
+      ],
     }).compile();
 
-    service = module.get<EmailService>(EmailService);
+    emailService = module.get<EmailService>(EmailService);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(emailService).toBeDefined();
   });
 });
