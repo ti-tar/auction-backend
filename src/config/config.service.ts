@@ -1,20 +1,25 @@
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import * as crypto from 'crypto';
 
 import { SnakeNamingStrategy } from '../snake-naming.strategy';
+import { User } from '../entities/user';
 
+@Injectable()
 export class ConfigService {
-  constructor() {
+  constructor(
+    private readonly jwtService: JwtService,
+  ) {
     const nodeEnv = this.nodeEnv;
     dotenv.config({
       path: `.${nodeEnv}.env`,
     });
 
-    // Replace \\n with \n to support multiline strings in AWS
     for (const envName of Object.keys(process.env)) {
       process.env[envName] = process.env[envName].replace(/\\n/g, '\n');
     }
-    // console.info(process.env);
   }
 
   public get(key: string): string {
@@ -29,12 +34,36 @@ export class ConfigService {
     return this.get('NODE_ENV') || 'development';
   }
 
+  generateRandomToken(): string {
+    return crypto.randomBytes(32).toString('hex');
+  }
+
+  getVerifyLink(token: string): string {
+    return `${this.get('FRONTEND_URL')}auth/verify_email?token=${encodeURIComponent(token)}`;
+  }
+
+  getResetPasswordLink(token: string): string {
+     return `${this.get('FRONTEND_URL')}auth/reset_email?token=${encodeURIComponent(token)}`;
+  }
+
+  generateJWT(user: User) {
+    const today = new Date();
+    const exp = new Date(today);
+    exp.setDate(today.getDate() + 60);
+
+    return this.jwtService.sign({
+      id: user.id,
+      firstName: user.firstName,
+      email: user.email,
+      exp: exp.getTime() / 1000,
+    });
+  }
+
   get typeOrmConfig(): TypeOrmModuleOptions {
     let entities = [__dirname + '/../entities/**{.ts,.js}'];
     let migrations = [__dirname + '/../migrations/**{.ts,.js}'];
 
-    if ((<any> module).hot) {
-
+    if ((<any> module).hot) {
       const entityContext = (<any> require).context('./../entities', true, /\.ts$/);
       entities = entityContext.keys().map((id) => {
         const entityModule = entityContext(id);
@@ -49,6 +78,7 @@ export class ConfigService {
         return migration;
       });
     }
+
     return {
       entities,
       migrations,

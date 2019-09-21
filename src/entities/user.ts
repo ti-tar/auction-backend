@@ -5,7 +5,12 @@ import { Lot } from './lot';
 import { Bid } from './bid';
 
 // utils
-import { createHmac } from 'crypto';
+import { getPasswordsHash } from '../libs/helpers';
+
+export enum Status {
+  pending = 'pending',
+  approved = 'approved',
+}
 
 @Entity('users')
 @Unique(['email', 'phone'])
@@ -31,9 +36,15 @@ export class User {
   @Column({ name: 'last_name', type: 'varchar', length: 255 })
   lastName: string;
 
+  @Column({ name: 'status', type: 'enum', enum: Status, default: 'pending'})
+  status?: string;
+
+  @Column({ name: 'token', type: 'varchar', length: 255, nullable: true })
+  token: string;
+
   @BeforeInsert()
   hashPassword() {
-    this.password = createHmac('sha256', this.password).digest('hex');
+    this.password = getPasswordsHash(this.password);
   }
 
   @OneToMany(type => Lot, lot => lot.user)
