@@ -1,18 +1,11 @@
-import { Injectable, Request, UsePipes } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getConnection } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as moment from 'moment';
-
-//
 import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
-
-// DTO's
 import { CreateBidDto } from './dto/create-bid.dto';
 import { User } from '../entities/user';
-
-// 
-import { BidEditValidation } from '../pipes/bid-edit.validation.pipe';
 
 @Injectable()
 export class BidsService {
@@ -29,24 +22,17 @@ export class BidsService {
 
   async getBidsCountByLotId(lotId: number): Promise<number> {
     return await this.bidsRepository.createQueryBuilder('bids').where({lot: { id: lotId }}).getCount();
-    // find({
-    //   where: {lot: { id: lotId }}
-    // });
   }
 
-  async create(bidRequest: CreateBidDto, user: User, lot: Lot ) {
+  async create(bidData: CreateBidDto, user: User, lot: Lot ) {
 
-    const { proposedPrice } = bidRequest;
+    const newBid = new Bid();
+    newBid.proposedPrice = bidData.proposedPrice;
+    newBid.bidCreationTime = moment().toDate();
+    newBid.user = user;
+    newBid.lot = lot;
 
-    const newbid = new Bid();
-    newbid.proposedPrice = proposedPrice;
-    newbid.bidCreationTime = moment().toDate();
-    newbid.user = user;
-    newbid.lot = lot;
-
-    // todo validation !!!
-
-    const savedBid = await this.bidsRepository.save(newbid);
+    const savedBid = await this.bidsRepository.save(newBid);
 
     return savedBid;
   }

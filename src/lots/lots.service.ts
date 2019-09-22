@@ -26,7 +26,7 @@ export class LotsService {
   async find(id: number): Promise<Lot> {
     return this.lotsRepository.findOne({
       where: {id},
-      relations: ['user'],
+      relations: ['user', 'bids'],
     });
   }
 

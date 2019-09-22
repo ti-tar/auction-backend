@@ -22,8 +22,8 @@ export class EmailService {
 
     const transport = nodemailer.createTransport({
       // todo from env too
-      host: 'smtp.mailtrap.io',
-      port: 2525,
+      host: this.configService.get('MAILTRIP_HOST'),
+      port: this.configService.getNumber('MAILTRIP_PORT'),
       auth: {
         user: this.configService.get('MAILTRIP_USER'),
         pass: this.configService.get('MAILTRIP_PASS'),
@@ -31,19 +31,16 @@ export class EmailService {
     });
 
     const mergedMailOptions = {
-      from: 'Example Team <from@example.com>',
-      to: 'to@example.com',
-      subject: 'Letter subject',
-      text: '',
-      html: '',
-      ...mailOptions,
+      from: '', to: '', subject: 'Letter subject', text: '', html: '', ...mailOptions,
     };
 
     transport.sendMail(mergedMailOptions, (error, info) => {
       if (error) {
         // todo return console.log(error);
+        console.log(error);
       }
       // todo smthng console.log('Email sent: ' + info.response);
+      console.log(info);
     });
   }
 }

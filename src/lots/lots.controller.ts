@@ -1,14 +1,13 @@
 import {
-  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete, Request,
-  UseInterceptors, UploadedFile, HttpStatus, HttpException, UseGuards,
+  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete,
+  UseInterceptors, UploadedFile, HttpStatus, HttpException, UseGuards, BadRequestException,
 } from '@nestjs/common';
-import { FileInterceptor, MulterModule } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import * as sharp from 'sharp';
-import * as fs from 'fs';
 
 import { LotsService } from './lots.service';
-import { BidsService } from './bids.service';
+import { BidsService } from '../bids/bids.service';
 
 import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
@@ -19,12 +18,12 @@ import { BidEditValidation } from '../pipes/bid-edit.validation.pipe';
 
 // dto
 import { CreateLotDto } from './dto/create-lot.dto';
-import { CreateBidDto } from './dto/create-bid.dto';
+import { CreateBidDto } from '../bids/dto/create-bid.dto';
 import { DeleteResult } from 'typeorm';
 
 import { extname } from 'path';
 import { AuthGuard } from '@nestjs/passport';
-import { UsersService } from '../users/users.service';
+import { User } from '../entities/user';
 
 interface LotsResponse {
   resources: Lot[];
@@ -46,7 +45,6 @@ export class LotsController {
   constructor(
     private readonly lotsService: LotsService,
     private readonly bidService: BidsService,
-    private readonly userService: UsersService,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
@@ -75,6 +73,7 @@ export class LotsController {
   async find(@Param('lotId') lotId: number): Promise<LotResponse> {
 
     const lot: Lot =  await this.lotsService.find(lotId);
+
     return {
       resource: lot,
       meta: {},
@@ -131,30 +130,32 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @UsePipes(new BidEditValidation())
   @Post(':lotId/bids')
   async addBid(
     @Param('lotId') lotId: number,
-    @Body() bidData: CreateBidDto,
-    @Req() request: { [key: string]: any },
+    @Body( new BidEditValidation() ) bidData: CreateBidDto,
+    @Req() request,
   ): Promise<BidResponse> {
 
     const { user } = request;
 
     const lot: Lot = await this.lotsService.find(lotId);
 
-    // todo check lotUserId !== userId
-
+    // validate
     if (!lot) {
-      throw new HttpException([{message: 'Lot info error'}], HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('Lot info error');
     }
 
-    if (!user) {
-      throw new HttpException([{message: 'User auth error.'}], HttpStatus.UNAUTHORIZED);
+    if (lot.user.id === user.id) {
+      throw new BadRequestException('You cant bid to your own lots');
     }
 
-    const newBid = await this.bidService.create(bidData, user, lot );
-
+    if (lot.bids && lot.bids.length && bidData.proposedPrice >= lot.bids[lot.bids.length - 1].proposedPrice) {
+      throw new BadRequestException('Bid should be higher last proposed bid.');
+    }
+    // save
+    const newBid = await this.bidService.create(bidData, user, lot);
+    // response
     return {
       resource: newBid,
       meta: {},

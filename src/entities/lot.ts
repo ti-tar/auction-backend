@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 // import { Transform } from 'class-transformer';
 
 import { User } from './user';
@@ -47,6 +47,6 @@ export class Lot {
   @ManyToOne(type => User, user => user.lots)
   user: User;
 
-  @ManyToOne(type => Bid, bid => bid.lot)
+  @OneToMany(type => Bid, bid => bid.lot)
   bids: Bid[];
 }

@@ -1,8 +1,9 @@
-import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
-import * as moment from 'moment';
+import { ArgumentMetadata, HttpException, HttpStatus, Injectable,
+  PipeTransform, BadRequestException } from '@nestjs/common';
 
 // DTO
-import { CreateBidDto } from '../lots/dto/create-bid.dto';
+import { CreateBidDto } from '../bids/dto/create-bid.dto';
+import { isNumber } from 'util';
 
 @Injectable()
 export class BidEditValidation implements PipeTransform<any, any> {
@@ -10,11 +11,9 @@ export class BidEditValidation implements PipeTransform<any, any> {
 
     const { proposedPrice } = value;
 
-    // console.log(proposedPrice);
-
-    throw new HttpException([{
-      message: '123 123 12',
-    }], HttpStatus.BAD_REQUEST);
+    if (!isNumber(proposedPrice)) {
+      throw new BadRequestException('...');
+    }
 
     return value;
   }

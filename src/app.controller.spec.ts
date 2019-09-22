@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-describe("AppController", () => {
+describe('AppController', () => {
   let testingModule: TestingModule;
   let controller: AppController;
   let spyService: AppService;
@@ -14,7 +14,7 @@ describe("AppController", () => {
         {
           provide: AppService,
           useFactory: () => ({
-            getHello: jest.fn(() => "May, the 4th b with u"),
+            getHello: jest.fn(() => 'May, the 4th b with u'),
           }),
         },
       ],
@@ -23,15 +23,15 @@ describe("AppController", () => {
     spyService = testingModule.get(AppService);
   });
 
-  describe("getHello()", () => {
+  describe('getHello()', () => {
 
-    it("Is getHello been called", async () => {
+    it('Is getHello been called', async () => {
       controller.getHello();
       expect(spyService.getHello).toHaveBeenCalled();
     });
 
-    it("Method getHello returns mocked string.", () => {
-      expect(controller.getHello()).toBe("May, the 4th b with u");
+    it('Method getHello returns mocked string.', () => {
+      expect(controller.getHello()).toBe('May, the 4th b with u');
     });
   });
 

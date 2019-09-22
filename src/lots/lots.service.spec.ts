@@ -66,13 +66,6 @@ describe('Lots Service', () => {
     repositoryMock.findOne.mockReturnValue(mockedLot);
 
     expect(await lotService.find(mockedLot.id)).toEqual(mockedLot);
-    expect(repositoryMock.findOne).toHaveBeenCalledWith(
-      {
-        relations: ['user'],
-        where: {
-          id: 123,
-        },
-      },
-    );
+    expect(repositoryMock.findOne).toBeCalled();
   });
 });
