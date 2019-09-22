@@ -11,7 +11,7 @@ import { User } from '../entities/user';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '../shared/config.service';
 import { getPasswordsHash } from '../libs/helpers';
 
 interface UserResponseObject {

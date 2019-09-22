@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmailService } from './email.service';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '../shared/config.service';
 
 import * as nodeMailerMock from 'nodemailer-mock';
 

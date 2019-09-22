@@ -3,11 +3,12 @@ import { AppModule } from './app.module';
 import * as helmet from 'helmet';
 import { join } from 'path';
 import { NestExpressApplication, ExpressAdapter } from '@nestjs/platform-express';
+import { LoggerService } from './shared/logger.service';
 import { ValidationPipe } from '@nestjs/common';
 
 //
-import { SharedModule } from './config/share.module';
-import { ConfigService } from './config/config.service';
+import { SharedModule } from './shared/share.module';
+import { ConfigService } from './shared/config.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -15,7 +16,7 @@ async function bootstrap() {
     new ExpressAdapter(),
     {
       cors: true,
-      // logger: console,
+      logger: new LoggerService(),
     },
   );
 
