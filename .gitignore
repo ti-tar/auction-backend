@@ -385,9 +385,9 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-=======
 # Local
 dist
-
 package-lock.json
-*-lock.json
+
+logs
+

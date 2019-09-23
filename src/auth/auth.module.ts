@@ -10,8 +10,9 @@ import { UsersModule } from '../users/users.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
-import { EmailService } from './../email/email.service';
-import { ConfigService } from '../config/config.service';
+import { EmailService } from '../email/email.service';
+import { ConfigService } from '../shared/config.service';
+import { LoggerService } from '../shared/logger.service';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { ConfigService } from '../config/config.service';
   providers: [
     UsersService, AuthService,
     JwtStrategy, LocalStrategy,
-    EmailService, ConfigService,
+    EmailService, ConfigService, LoggerService,
   ],
   controllers: [AuthController],
   exports: [AuthService],

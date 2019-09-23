@@ -11,8 +11,9 @@ import { User } from '../entities/user';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '../shared/config.service';
 import { getPasswordsHash } from '../libs/helpers';
+import { LoggerService } from '../shared/logger.service';
 
 interface UserResponseObject {
   resource: UserInterface;
@@ -26,6 +27,7 @@ export class AuthController {
     private readonly userService: UsersService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
   ) {}
 
   @UseGuards(AuthGuard('local'))
@@ -59,10 +61,24 @@ export class AuthController {
       throw new BadRequestException('Invalid token.');
     }
 
-    return await this.userService.update(user, {
+    const updatedUser = await this.userService.update(user, {
       status: 'approved',
       token: null,
     });
+
+    const sentMail = await this.emailService.sendEmail( {
+      from: 'Auction Team <from@example.com>',
+      to: updatedUser.email,
+      subject: 'You was verified!',
+      text: 'Hi! You was verified. Thank you',
+      html: `<h1>Hi!</h1><p>You was verified. Thank you</p>`,
+    });
+
+    if (sentMail && sentMail.envelope) {
+      this.logger.log(`Email verified. Success letter sent to ${sentMail.envelope.to.join(', ')}`);
+    }
+
+    return updatedUser;
   }
 
   @UsePipes(new VadationPipe())
@@ -82,13 +98,17 @@ export class AuthController {
 
     const verifyLink = this.configService.getVerifyLink(createdUser.token);
 
-    this.emailService.sendEmail( {
+    const sentMail = await this.emailService.sendEmail( {
       from: 'Auction Team <from@example.com>',
       to: createdUser.email,
       subject: 'Letter to verify your registration',
       text: 'Hi! To complete registration follow link: ' + `${verifyLink}`,
       html: `<h1>Hi!</h1><p>To complete registration follow link:</p><p><a href="${verifyLink}">Verify email.</a></p>`,
     });
+
+    if (sentMail && sentMail.envelope) {
+      this.logger.log(`Verification Email to ${sentMail.envelope.to.join(', ')} sent.`);
+    }
 
     return {
       resource: this.buildUserResponseObject(createdUser),
@@ -116,7 +136,7 @@ export class AuthController {
 
     // send an email with reset link
     const resetPassLink = this.configService.getResetPasswordLink(token);
-    this.emailService.sendEmail( {
+    await this.emailService.sendEmail( {
       from: 'Auction Team <from@example.com>',
       to: user.email,
       subject: 'Email to reset password.',

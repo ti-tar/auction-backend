@@ -97,8 +97,7 @@ export class LotsController {
   @UseGuards(AuthGuard('jwt'))
   @Delete(':lotId')
   async delete(@Param('lotId') lotId: number): Promise<DeleteResult> {
-    const resp = await this.lotsService.delete(lotId);
-    return resp;
+    return await this.lotsService.delete(lotId);
   }
 
   @UseGuards(AuthGuard('jwt'))

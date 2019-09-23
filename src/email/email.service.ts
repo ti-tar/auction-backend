@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
-import { ConfigService } from '../config/config.service';
+import { NotImplementedException, Injectable } from '@nestjs/common';
+import { createTransport, SentMessageInfo } from 'nodemailer';
+import { ConfigService } from '../shared/config.service';
+import { LoggerService } from '../shared/logger.service';
 
-interface MailOptions {
+interface MailObject {
   from: string;
   to: string;
   subject: string;
@@ -15,32 +16,28 @@ export class EmailService {
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
   ) {}
 
-  sendEmail(mailOptions: MailOptions): void {
+  async sendEmail(emailObject: MailObject): Promise<SentMessageInfo> {
     // according to https://blog.mailtrap.io/sending-emails-with-nodemailer/
 
-    const transport = nodemailer.createTransport({
-      // todo from env too
+    const transportOptions = {
       host: this.configService.get('MAILTRIP_HOST'),
       port: this.configService.getNumber('MAILTRIP_PORT'),
       auth: {
         user: this.configService.get('MAILTRIP_USER'),
-        pass: this.configService.get('MAILTRIP_PASS'),
+        pass: ' ', // this.configService.get('MAILTRIP_PASS'),
       },
-    });
-
-    const mergedMailOptions = {
-      from: '', to: '', subject: 'Letter subject', text: '', html: '', ...mailOptions,
     };
 
-    transport.sendMail(mergedMailOptions, (error, info) => {
-      if (error) {
-        // todo return console.log(error);
-        console.log(error);
-      }
-      // todo smthng console.log('Email sent: ' + info.response);
-      console.log(info);
-    });
+    const transport = createTransport(transportOptions);
+
+    try {
+      return await transport.sendMail(emailObject);
+    } catch (error) {
+      this.logger.error(error);
+      throw new NotImplementedException('Email not sent.');
+    }
   }
 }

@@ -32,8 +32,6 @@ export class BidsService {
     newBid.user = user;
     newBid.lot = lot;
 
-    const savedBid = await this.bidsRepository.save(newBid);
-
-    return savedBid;
+    return await this.bidsRepository.save(newBid);
   }
 }

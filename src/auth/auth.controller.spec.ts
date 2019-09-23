@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { EmailService } from '../email/email.service';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '../shared/config.service';
 import { UsersService } from '../users/users.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
