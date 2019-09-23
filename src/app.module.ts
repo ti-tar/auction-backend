@@ -9,6 +9,7 @@ import { LotsModule } from './lots/lots.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EmailService } from './email/email.service';
+import { LoggerService } from './shared/logger.service';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { EmailService } from './email/email.service';
   providers: [
     AppService,
     EmailService,
+    LoggerService,
   ],
 })
 

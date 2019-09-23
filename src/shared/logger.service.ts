@@ -1,6 +1,7 @@
 // inspired by https://github.com/nestjs/nest/issues/507#issuecomment-374221089
 
 import * as winston from 'winston';
+import * as moment from 'moment';
 import * as chalk from 'chalk';
 import * as PrettyError from 'pretty-error';
 // @ts-ignore
@@ -15,59 +16,45 @@ export class LoggerService {
     this.logger = winston.createLogger(
       {
         transports: [
-          // new winston.transports.Console(),
           new winston.transports.File({ filename: 'logs/errors.development.log', level: 'error' }),
         ],
       },
     );
     this.prettyError.skipNodeFiles();
     this.prettyError.skipPackage('express', '@nestjs/common', '@nestjs/core');
+
+    if (process.env.NODE_ENV !== 'production') {
+      this.logger.add(new winston.transports.Console(
+        {
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.printf(info => info.message),
+          ),
+        },
+      ));
+    }
   }
 
   log(message: string): void {
-    const currentDate = new Date();
-    this.logger.info(message, {
-      timestamp: currentDate.toISOString(),
-    });
-    this.formattedLog('info', message);
+    this.logger.info(LoggerService.getColoredRows('info', message));
   }
 
-  error(message: string, trace?: any): void {
-    const currentDate = new Date();
+  error(errorOrMessage: any ): void { // todo change any letter
+    this.logger.error(LoggerService.getColoredRows('error', `${errorOrMessage}`));
 
-    this.logger.error(
-      `${message} -> (${trace || 'trace not provided !'})`,
-      {
-        timestamp: currentDate.toISOString(),
-      },
-    );
-
-    if (trace && process.env.NODE_ENV === 'development') {
-      this.prettyError.render(trace, true);
+    if (errorOrMessage.stack && process.env.NODE_ENV !== 'production') {
+      this.logger.error(this.prettyError.render(errorOrMessage));
     }
-
-    this.formattedLog('error', message);
   }
 
   warn(message: string): void {
-    const currentDate = new Date();
-    this.logger.warn(message, {
-      timestamp: currentDate.toISOString(),
-    });
-    this.formattedLog('warn', message);
+    this.logger.warn(message, LoggerService.getColoredRows('warn', message));
   }
 
-  // this method prints a log in terminal
-  private formattedLog(level: string, message: string): void {
-    console.log(this.getColoredRows(level, message));
-  }
-
-  // this method prints a log in terminal
-  private getColoredRows(level: string, message: string): string {
-
+  // this method makes colored log row for terminal
+  private static getColoredRows(level: string, message: string): string {
     const color = chalk.default;
-    const currentDate = new Date();
-    const time = `${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
+    const time = moment().format('YYYY, DD MMM, hh:mm:ss');
 
     switch (level) {
       case 'info':
