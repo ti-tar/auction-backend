@@ -10,15 +10,18 @@ import { Bid } from '../entities/bid';
 import { LotsService } from './lots.service';
 import { UsersService } from '../users/users.service';
 import { BidsService } from '../bids/bids.service';
+import { LoggerService } from '../shared/logger.service';
+import { ConfigService } from '../shared/config.service';
+import { JwtModule } from '@nestjs/jwt';
+import { SECRET } from '../config';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Lot, User, Bid]),
     PassportModule,
+    JwtModule.register({ secretOrPrivateKey: SECRET }),
   ],
-  providers: [LotsService, UsersService, BidsService],
-  controllers: [
-    LotsController,
-  ],
+  providers: [LotsService, UsersService, BidsService, LoggerService, ConfigService],
+  controllers: [LotsController],
 })
 export class LotsModule {}

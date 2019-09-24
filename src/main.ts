@@ -4,11 +4,6 @@ import * as helmet from 'helmet';
 import { join } from 'path';
 import { NestExpressApplication, ExpressAdapter } from '@nestjs/platform-express';
 import { LoggerService } from './shared/logger.service';
-import { ValidationPipe } from '@nestjs/common';
-
-//
-import { SharedModule } from './shared/share.module';
-import { ConfigService } from './shared/config.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -20,16 +15,11 @@ async function bootstrap() {
     },
   );
 
-  // app.useStaticAssets(join(__dirname, '..', 'upload'));
   app.useStaticAssets(
     join(__dirname, '..', 'upload'),
   );
 
   app.use(helmet());
-
-  // app.useGlobalPipes(new ValidationPipe());
-
-  const configService = app.select(SharedModule).get(ConfigService);
 
   app.setGlobalPrefix('api');
 

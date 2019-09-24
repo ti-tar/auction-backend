@@ -3,9 +3,7 @@ import { IsEmail } from 'class-validator';
 import { Exclude } from 'class-transformer';
 import { Lot } from './lot';
 import { Bid } from './bid';
-
-// utils
-import { getPasswordsHash } from '../libs/helpers';
+import { ConfigService } from '../shared/config.service';
 
 export enum Status {
   pending = 'pending',
@@ -43,8 +41,9 @@ export class User {
   token: string;
 
   @BeforeInsert()
-  hashPassword() {
-    this.password = getPasswordsHash(this.password);
+  beforeInsert() {
+    this.password = ConfigService.getPasswordsHash(this.password);
+    this.token = ConfigService.generateRandomToken();
   }
 
   @OneToMany(type => Lot, lot => lot.user)

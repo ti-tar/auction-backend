@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigService } from './shared/config.service';
-import { SharedModule } from './shared/share.module';
+import { SharedModule } from './shared/shared.module';
 import { LotsModule } from './lots/lots.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';

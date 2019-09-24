@@ -6,6 +6,10 @@ import * as crypto from 'crypto';
 
 import { SnakeNamingStrategy } from '../snake-naming.strategy';
 import { User } from '../entities/user';
+import { createHmac } from 'crypto';
+
+declare const module: any;
+declare const require: any;
 
 @Injectable()
 export class ConfigService {
@@ -34,12 +38,16 @@ export class ConfigService {
     return this.get('NODE_ENV') || 'development';
   }
 
-  generateRandomToken(): string {
+  public static generateRandomToken(): string {
     return crypto.randomBytes(32).toString('hex');
   }
 
+  public static getPasswordsHash(password: string): string {
+    return createHmac('sha256', password).digest('hex');
+  }
+
   getVerifyLink(token: string): string {
-    return `${this.get('FRONTEND_URL')}auth/verify_email?token=${encodeURIComponent(token)}`;
+    return `${this.get('FRONTEND_URL')}auth/verify/email?token=${encodeURIComponent(token)}`;
   }
 
   getResetPasswordLink(token: string): string {
@@ -63,15 +71,15 @@ export class ConfigService {
     let entities = [__dirname + '/../entities/**{.ts,.js}'];
     let migrations = [__dirname + '/../migrations/**{.ts,.js}'];
 
-    if ((<any> module).hot) {
-      const entityContext = (<any> require).context('./../entities', true, /\.ts$/);
+    if (module.hot) {
+      const entityContext = require.context('./../entities', true, /\.ts$/);
       entities = entityContext.keys().map((id) => {
         const entityModule = entityContext(id);
         const [entity] = Object.values(entityModule);
         return entity;
       });
 
-      const migrationContext = (<any> require).context('./../migrations', false, /\.ts$/);
+      const migrationContext = require.context('./../migrations', false, /\.ts$/);
       migrations = migrationContext.keys().map((id) => {
         const migrationModule = migrationContext(id);
         const [migration] = Object.values(migrationModule);

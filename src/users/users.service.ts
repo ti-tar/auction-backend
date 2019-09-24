@@ -1,21 +1,9 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getRepository, DeleteResult } from 'typeorm';
-// import { validate } from 'class-validator';
-// import * as jwt from 'jsonwebtoken';
-// import { SECRET } from '../config';
-// import { throwErrorResponse } from '../libs/errors';
-// entities
+import { Repository, DeleteResult } from 'typeorm';
 import { User } from '../entities/user';
-// dto
-import { LoginUserDto } from './dto/login-user.dto';
-// import { CreateUserDto } from './dto/create-user.dto';
-// import { UpdateUserDto } from './dto/update-user.dto';
-// crypto
-import * as crypto from 'crypto';
-// interface
-import { UserInterface } from './users.interface';
-import { getPasswordsHash } from '../libs/helpers';
+import { LoginUserDto } from '../auth/dto/login-user.dto';
+import { ConfigService } from '../shared/config.service';
 
 @Injectable()
 export class UsersService {
@@ -31,7 +19,7 @@ export class UsersService {
   async findOne(loginUserDto: LoginUserDto): Promise<User> {
     const findOneOptions = {
       email: loginUserDto.email,
-      password: getPasswordsHash(loginUserDto.password),
+      password: ConfigService.getPasswordsHash(loginUserDto.password),
     };
 
     return await this.userRepository.findOne(findOneOptions);
@@ -45,12 +33,16 @@ export class UsersService {
     return await this.userRepository.save({ ...user, ...updatedData });
   }
 
-  async create(user: User): Promise<User> {
+  async save(user: User): Promise<User> {
     return await this.userRepository.save(user);
   }
 
   async delete(email: string): Promise<DeleteResult> {
     return await this.userRepository.delete({ email });
+  }
+
+  async login(email: string): Promise<User> {
+    return await this.findByEmail(email);
   }
 
   async findByEmail(email: string): Promise<User> {

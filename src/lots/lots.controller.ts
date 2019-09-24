@@ -1,190 +1,126 @@
 import {
-  Controller, Get, Put, Post, Body, UsePipes, Param, Req, Delete,
-  UseInterceptors, UploadedFile, HttpStatus, HttpException, UseGuards, BadRequestException,
+  Controller, Get, Put, Post, Body, UsePipes, Param, Delete,
+  UseInterceptors, UploadedFile, UseGuards, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import * as sharp from 'sharp';
-
+import * as uuid from 'uuid/v4';
 import { LotsService } from './lots.service';
 import { BidsService } from '../bids/bids.service';
-
 import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
-// pipes
+import { User } from '../entities/user';
 import { VadationPipe } from '../pipes/validation.pipe';
 import { LotEditValidation } from '../pipes/lot-edit.validation.pipe';
-import { BidEditValidation } from '../pipes/bid-edit.validation.pipe';
-
-// dto
 import { CreateLotDto } from './dto/create-lot.dto';
 import { CreateBidDto } from '../bids/dto/create-bid.dto';
 import { DeleteResult } from 'typeorm';
-
 import { extname } from 'path';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from '../entities/user';
-
-interface LotsResponse {
-  resources: Lot[];
-  meta: object;
-}
-
-interface LotResponse {
-  resource: Lot;
-  meta: object;
-}
-
-interface BidResponse {
-  resource: Bid;
-  meta: object;
-}
+import { LoggerService } from '../shared/logger.service';
+import { LotsSerializerInterceptor } from './serializers/lots.interceptor';
+import { BidsSerializerInterceptor } from '../bids/serializers/bids.interceptor';
+import { UserDecorator } from '../users/user.decorator';
 
 @Controller('lots')
 export class LotsController {
   constructor(
     private readonly lotsService: LotsService,
     private readonly bidService: BidsService,
+    private readonly loggerService: LoggerService,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotsSerializerInterceptor)
   @Get()
-  async findAll(): Promise<LotsResponse> {
-    const lots = await this.lotsService.findAll();
-    return {
-      resources: lots,
-      meta: {},
-    };
+  async findAll(): Promise<Lot[]> {
+    return await this.lotsService.findAll();
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotsSerializerInterceptor)
   @Get('own')
-  async findOwnAll(@Req() request: { [key: string]: any }): Promise<LotsResponse> {
-    const { user } = request;
-    const lots = await this.lotsService.findAllByUserId(user.id);
-    return {
-      resources: lots,
-      meta: {},
-    };
+  async findOwnAll(@UserDecorator() user: User): Promise<Lot[]> {
+    return await this.lotsService.findAllByUserId(user.id);
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotsSerializerInterceptor)
   @Get(':lotId')
-  async find(@Param('lotId') lotId: number): Promise<LotResponse> {
-
-    const lot: Lot =  await this.lotsService.find(lotId);
-
-    return {
-      resource: lot,
-      meta: {},
-    };
+  async find(@Param('lotId') lotId: number): Promise<Lot> {
+    return await this.lotsService.find(lotId);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @UsePipes(new VadationPipe(), new LotEditValidation())
+  @UseInterceptors(LotsSerializerInterceptor)
   @Put(':lotId')
-  async update(@Param('lotId') lotId: number, @Body() lotData: CreateLotDto): Promise<LotResponse> {
-
-    // todo validation check jwt user id  === lot creator id
-    const updatedLot = await this.lotsService.update(lotData, lotId);
-
-    return {
-      resource: updatedLot,
-      meta: {},
-    };
+  async update(@Param('lotId') lotId: number, @Body() lotData: CreateLotDto): Promise<Lot> {
+    return this.lotsService.update(lotData, lotId);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Delete(':lotId')
   async delete(@Param('lotId') lotId: number): Promise<DeleteResult> {
-    return await this.lotsService.delete(lotId);
+    return this.lotsService.delete(lotId);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @UsePipes(new VadationPipe(), new LotEditValidation())
+  @UseInterceptors(LotsSerializerInterceptor)
   @Post()
-  async create(@Body() lotData: CreateLotDto, @Req() request ): Promise<LotResponse> {
-
-    const { user } = request;
-
-    return {
-      resource: await this.lotsService.create(lotData, user),
-      meta: {},
-    };
+  async create(@Body() lotData: CreateLotDto, @UserDecorator() user: User ): Promise<Lot> {
+    return this.lotsService.create(lotData, user);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Get(':lotId/bids')
   async findBidsById(@Param('lotId') lotId: number): Promise<any> {
-
-    const bids: Bid[] = await this.bidService.findAllByLotId(lotId);
-    const totalBids: number = await this.bidService.getBidsCountByLotId(lotId);
-
     return {
-      resources: bids,
+      resources: await this.bidService.findAllByLotId(lotId),
       meta: {
-        total: totalBids,
+        total: await this.bidService.getBidsCountByLotId(lotId),
       },
     };
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(BidsSerializerInterceptor)
   @Post(':lotId/bids')
   async addBid(
     @Param('lotId') lotId: number,
-    @Body( new BidEditValidation() ) bidData: CreateBidDto,
-    @Req() request,
-  ): Promise<BidResponse> {
-
-    const { user } = request;
-
-    const lot: Lot = await this.lotsService.find(lotId);
-
-    // validate
-    if (!lot) {
-      throw new BadRequestException('Lot info error');
-    }
-
-    if (lot.user.id === user.id) {
-      throw new BadRequestException('You cant bid to your own lots');
-    }
-
-    if (lot.bids && lot.bids.length && bidData.proposedPrice >= lot.bids[lot.bids.length - 1].proposedPrice) {
-      throw new BadRequestException('Bid should be higher last proposed bid.');
-    }
-    // save
-    const newBid = await this.bidService.create(bidData, user, lot);
-    // response
-    return {
-      resource: newBid,
-      meta: {},
-    };
+    @Body( new VadationPipe() ) bidData: CreateBidDto,
+    @UserDecorator() user: User,
+  ): Promise<Bid> {
+    const lot = await this.lotsService.find(lotId);
+    return this.bidService.addBid(bidData, user, lot);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: multer.diskStorage({
-      destination: './upload/images/lots',
-      filename: (req, file, cb) => {
-        const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
-        return cb(null, `${randomName}${extname(file.originalname)}`);
+  @UseInterceptors(
+    FileInterceptor(
+      'file',
+      {
+        storage: multer.diskStorage({
+          destination: './upload/images/lots',
+          filename: (req, file, callback) => {
+            return callback(null, `${uuid()}${extname(file.originalname)}`);
+          },
+        }),
       },
-    }),
-  }))
-  async uploadFile(@UploadedFile() file: any): Promise<{ fileName: string }> {
-    // make thumb from uploaded, resize image to 200px width with sharp
-    const filePath: string = file.path;
-    const fileName: string = file.filename;
-    const fullPath: string = `upload/images/lots/thumb/${fileName}`;
-    const imageResult = await sharp(filePath)
-    .resize(200)
-    .toFile(fullPath, (err: any, info: any) => {
-      if (err) {
-        throw new HttpException({ message: err}, HttpStatus.BAD_REQUEST);
-      }
-    });
-
-    return { fileName };
+    ),
+  )
+  async uploadFile(@UploadedFile() file): Promise<{ fileName: string }> {
+    const fullPath: string = `upload/images/lots/thumb/${file.filename}`;
+    try {
+      const {width, height, size}: sharp.OutputInfo = await sharp(file.path).resize(200).toFile(fullPath);
+      this.loggerService.log(`File '${file.filename}' thumbed to ${width}x${height}px, size: ${size}b, saved!`);
+    } catch (error) {
+      this.loggerService.error(error);
+      throw new BadRequestException('Error during saving image.');
+    }
+    return { fileName: file.filename };
   }
 }

@@ -1,24 +1,23 @@
 import {
-  Controller, UsePipes, Get, Post, Body, UseGuards, Request, BadRequestException,
+  Controller, UsePipes, Get, Post, Body, UseGuards, Request, BadRequestException, UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { VadationPipe } from '../pipes/validation.pipe';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { ForgotUserDto } from './dto/forgot-user.dto';
-import { ResetUserDto } from './dto/reset-user.dto';
-import { UserInterface } from '../users/users.interface';
+import { CreateUserDto } from './dto/create-user.dto';
 import { User } from '../entities/user';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '../shared/config.service';
-import { getPasswordsHash } from '../libs/helpers';
 import { LoggerService } from '../shared/logger.service';
-
-interface UserResponseObject {
-  resource: UserInterface;
-  meta: {};
-}
+import { ForgotUserDto } from './dto/forgot-user.dto';
+import { ResetUserDto } from './dto/reset-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
+import { VerifyUserDto } from './dto/verify-user.dto';
+import { LoginSerializerInterceptor } from './serializers/login.interceptor';
+import { SignUpSerializerInterceptor } from './serializers/signup.interceptor';
+import { UserDecorator } from '../users/user.decorator';
+import { UserProfileSerializerInterceptor } from './serializers/user-profile.interceptor';
 
 @Controller('auth')
 export class AuthController {
@@ -31,88 +30,31 @@ export class AuthController {
   ) {}
 
   @UseGuards(AuthGuard('local'))
+  @UseInterceptors(LoginSerializerInterceptor)
   @Post('login')
-  async login(@Body() body): Promise<UserResponseObject> {
-    const user = await this.userService.findByEmail(body.email);
-
-    if (user.status !== 'approved') {
-      throw new BadRequestException('Your email is not verified yet. Check your email and try again.');
-    }
-
-    // return user.status === 'approved' ? { ...response, token: this.authService.generateJWT(user) } : response;
+  async login(@Body() loginUserDto: LoginUserDto): Promise<{user: User, jwtToken: string}> {
+    const user = await this.authService.loginUser(loginUserDto);
     return {
-      resource: {
-        id: user.id,
-        firstName: user.firstName,
-        email: user.email,
-        token: this.configService.generateJWT(user),
-      },
-      meta: {},
+      user,
+      jwtToken: this.configService.generateJWT(user),
     };
   }
 
-  @Post('verify_email')
-  async verifyEmail(@Body() body): Promise<User> {
-    // get by token
-    const user = await this.userService.findByToken(body.token);
-
-    // check if user exists
-    if (!user) {
-      throw new BadRequestException('Invalid token.');
-    }
-
-    const updatedUser = await this.userService.update(user, {
-      status: 'approved',
-      token: null,
-    });
-
-    const sentMail = await this.emailService.sendEmail( {
-      from: 'Auction Team <from@example.com>',
-      to: updatedUser.email,
-      subject: 'You was verified!',
-      text: 'Hi! You was verified. Thank you',
-      html: `<h1>Hi!</h1><p>You was verified. Thank you</p>`,
-    });
-
-    if (sentMail && sentMail.envelope) {
-      this.logger.log(`Email verified. Success letter sent to ${sentMail.envelope.to.join(', ')}`);
-    }
-
-    return updatedUser;
+  @UsePipes(new VadationPipe())
+  @UseInterceptors(SignUpSerializerInterceptor)
+  @Post('signup')
+  async singUp(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return await this.authService.singUp(createUserDto);
   }
 
   @UsePipes(new VadationPipe())
-  @Post('signup')
-  async singUp(@Body() userSignUpData: CreateUserDto) {
-
-    // check uniqueness of username/email
-    const user = await this.userService.findByEmail(userSignUpData.email);
-    if (user) {
-      throw new BadRequestException('Email must be unique. Already registered.');
-    }
-
-    const createdUser = await this.authService.singUp({
-      ...userSignUpData,
-      token: this.configService.generateRandomToken(),
-    });
-
-    const verifyLink = this.configService.getVerifyLink(createdUser.token);
-
-    const sentMail = await this.emailService.sendEmail( {
-      from: 'Auction Team <from@example.com>',
-      to: createdUser.email,
-      subject: 'Letter to verify your registration',
-      text: 'Hi! To complete registration follow link: ' + `${verifyLink}`,
-      html: `<h1>Hi!</h1><p>To complete registration follow link:</p><p><a href="${verifyLink}">Verify email.</a></p>`,
-    });
-
-    if (sentMail && sentMail.envelope) {
-      this.logger.log(`Verification Email to ${sentMail.envelope.to.join(', ')} sent.`);
-    }
-
+  @UseInterceptors(LoginSerializerInterceptor)
+  @Post('verify/email')
+  async verifyEmail(@Body() verifyUserData: VerifyUserDto): Promise<{user: User, jwtToken: string}> {
+    const user = await this.authService.verifyEmail(verifyUserData.token);
     return {
-      resource: this.buildUserResponseObject(createdUser),
-      meta: {},
+      user,
+      jwtToken: this.configService.generateJWT(user),
     };
   }
 
@@ -125,12 +67,11 @@ export class AuthController {
       throw new BadRequestException('No such email.');
     }
 
-    // check if user approved
     if (user.status === 'pending') {
       throw new BadRequestException('You haven\'t been approved.');
     }
 
-    const token = this.configService.generateRandomToken();
+    const token = ConfigService.generateRandomToken();
 
     await this.userService.update(user, { token });
 
@@ -155,7 +96,6 @@ export class AuthController {
       throw new BadRequestException('Passwords not equal');
     }
 
-    // check if user approved and token === body.token
     const user = await this.userService.findByToken(token);
 
     if (!user) {
@@ -167,7 +107,7 @@ export class AuthController {
     }
 
     await this.userService.update(user, {
-      password: getPasswordsHash('password'),
+      password: ConfigService.getPasswordsHash('password'),
       token: null,
     });
 
@@ -175,18 +115,9 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(UserProfileSerializerInterceptor)
   @Get('profile')
-  profile(@Request() request ): User | null {
-    return request.user;
-  }
-
-  private buildUserResponseObject(user: User): UserInterface {
-    const response = {
-      id: user.id,
-      firstName: user.firstName,
-      email: user.email,
-      status: user.status,
-    };
-    return user.status === 'approved' ? { ...response, token: this.configService.generateJWT(user) } : response;
+  async profile(@UserDecorator() user ): Promise<User> {
+    return  this.userService.findOneById(user.id);
   }
 }

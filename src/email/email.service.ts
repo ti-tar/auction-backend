@@ -2,6 +2,7 @@ import { NotImplementedException, Injectable } from '@nestjs/common';
 import { createTransport, SentMessageInfo } from 'nodemailer';
 import { ConfigService } from '../shared/config.service';
 import { LoggerService } from '../shared/logger.service';
+import { User } from '../entities/user';
 
 interface MailObject {
   from: string;
@@ -16,18 +17,39 @@ export class EmailService {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly logger: LoggerService,
+    private readonly loggerService: LoggerService,
   ) {}
 
+  async sendVerificationEmail(user: User): Promise<SentMessageInfo> {
+    const verifyLink = this.configService.getVerifyLink(user.token);
+
+    return this.sendEmail( {
+      from: 'Auction Team <from@example.com>',
+      to: user.email,
+      subject: 'Letter to verify your registration',
+      text: 'Hi! To complete registration follow link: ' + `${verifyLink}`,
+      html: `<h1>Hi!</h1><p>To complete registration follow link:</p><p><a href="${verifyLink}">Verify email.</a></p>`,
+    });
+  }
+
+  async sendApprovalEmail(user: User): Promise<SentMessageInfo> {
+    return this.sendEmail( {
+      from: 'Auction Team <from@example.com>',
+      to: user.email,
+      subject: 'You was verified!',
+      text: 'Hi! You was verified. Thank you',
+      html: `<h1>Hi!</h1><p>You was verified. Thank you</p>`,
+    });
+  }
+
   async sendEmail(emailObject: MailObject): Promise<SentMessageInfo> {
-    // according to https://blog.mailtrap.io/sending-emails-with-nodemailer/
 
     const transportOptions = {
       host: this.configService.get('MAILTRIP_HOST'),
       port: this.configService.getNumber('MAILTRIP_PORT'),
       auth: {
         user: this.configService.get('MAILTRIP_USER'),
-        pass: ' ', // this.configService.get('MAILTRIP_PASS'),
+        pass: this.configService.get('MAILTRIP_PASS'),
       },
     };
 
@@ -36,7 +58,7 @@ export class EmailService {
     try {
       return await transport.sendMail(emailObject);
     } catch (error) {
-      this.logger.error(error);
+      this.loggerService.error(error);
       throw new NotImplementedException('Email not sent.');
     }
   }
