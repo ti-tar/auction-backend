@@ -53,7 +53,7 @@ export class AuthService {
 
     } catch ( errors ) {
       this.loggerService.error(errors);
-      throw new BadRequestException('Error occurred while saving user!');
+      throw new BadRequestException('Error occurred during saving user!');
     }
   }
 

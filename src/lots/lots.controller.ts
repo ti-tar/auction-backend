@@ -1,6 +1,6 @@
 import {
   Controller, Get, Put, Post, Body, UsePipes, Param, Delete,
-  UseInterceptors, UploadedFile, UseGuards, BadRequestException,
+  UseInterceptors, UploadedFile, UseGuards, BadRequestException, ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
@@ -11,7 +11,7 @@ import { BidsService } from '../bids/bids.service';
 import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
 import { User } from '../entities/user';
-import { VadationPipe } from '../pipes/validation.pipe';
+import { ValidationPipe } from '../pipes/validation.pipe';
 import { CreateLotDto } from './dto/create-lot.dto';
 import { CreateBidDto } from '../bids/dto/create-bid.dto';
 import { DeleteResult } from 'typeorm';
@@ -21,6 +21,7 @@ import { LoggerService } from '../shared/logger.service';
 import { LotsSerializerInterceptor } from './serializers/lots.interceptor';
 import { BidsSerializerInterceptor } from '../bids/serializers/bids.interceptor';
 import { UserDecorator } from '../users/user.decorator';
+import { LotEditValidationPipe } from '../pipes/lot-edit-validation-pipe.service';
 
 @Controller('lots')
 export class LotsController {
@@ -34,48 +35,33 @@ export class LotsController {
   @UseInterceptors(LotsSerializerInterceptor)
   @Get()
   async findAll(): Promise<Lot[]> {
-    return await this.lotsService.findAll();
+    return this.lotsService.findAll();
   }
 
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
-  @Get('own')
-  async findOwnAll(@UserDecorator() user: User): Promise<Lot[]> {
-    return await this.lotsService.findAllByUserId(user.id);
+  @Get('own/bids')
+  async findLotsWithOwnBids(@UserDecorator() user: User): Promise<Lot[]> {
+    return this.lotsService.findLotsByBidUserId(user.id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotsSerializerInterceptor)
+  @Get('own/lots')
+  async findOwnLots(@UserDecorator() user: User): Promise<Lot[]> {
+    return this.lotsService.findAllByUserId(user.id);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
   @Get(':lotId')
-  async find(@Param('lotId') lotId: number): Promise<Lot> {
-    return await this.lotsService.find(lotId);
-  }
-
-  @UseGuards(AuthGuard('jwt'))
-  @UsePipes(new VadationPipe())
-  @UseInterceptors(LotsSerializerInterceptor)
-  @Put(':lotId')
-  async update(@Param('lotId') lotId: number, @Body() lotData: CreateLotDto): Promise<Lot> {
-    return this.lotsService.update(lotData, lotId);
-  }
-
-  @UseGuards(AuthGuard('jwt'))
-  @Delete(':lotId')
-  async delete(@Param('lotId') lotId: number): Promise<DeleteResult> {
-    return this.lotsService.delete(lotId);
-  }
-
-  @UseGuards(AuthGuard('jwt'))
-  @UsePipes(new VadationPipe())
-  @UseInterceptors(LotsSerializerInterceptor)
-  @Post()
-  async create(@Body() lotData: CreateLotDto, @UserDecorator() user: User ): Promise<Lot> {
-    return this.lotsService.create(lotData, user);
+  async find(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<Lot> {
+    return this.lotsService.find(lotId);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Get(':lotId/bids')
-  async findBidsById(@Param('lotId') lotId: number): Promise<any> {
+  async findBidsById(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<any> {
     return {
       resources: await this.bidService.findAllByLotId(lotId),
       meta: {
@@ -85,11 +71,38 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Delete(':lotId')
+  async delete(@Param('lotId') lotId: number): Promise<DeleteResult> {
+    return this.lotsService.delete(lotId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotsSerializerInterceptor)
+  @Put(':lotId')
+  async update(
+    @Param('lotId') lotId: number,
+    @Body(new ValidationPipe(), new LotEditValidationPipe()) lotData: CreateLotDto,
+    @UserDecorator() user,
+  ): Promise<Lot> {
+    return this.lotsService.update(lotId, lotData, user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotsSerializerInterceptor)
+  @Post()
+  async create(
+    @Body(new ValidationPipe(), new LotEditValidationPipe()) lotData: CreateLotDto,
+    @UserDecorator() user: User,
+  ): Promise<Lot> {
+    return this.lotsService.create(lotData, user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(BidsSerializerInterceptor)
   @Post(':lotId/bids')
   async addBid(
     @Param('lotId') lotId: number,
-    @Body( new VadationPipe() ) bidData: CreateBidDto,
+    @Body( new ValidationPipe() ) bidData: CreateBidDto,
     @UserDecorator() user: User,
   ): Promise<Bid> {
     const lot = await this.lotsService.find(lotId);

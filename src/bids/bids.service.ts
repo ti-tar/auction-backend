@@ -24,7 +24,6 @@ export class BidsService {
   }
 
   async addBid(bidData: CreateBidDto, user: User, lot: Lot ) {
-
     if (!lot) {
       throw new BadRequestException('Lot info error');
     }
@@ -35,6 +34,10 @@ export class BidsService {
 
     if (lot.bids && lot.bids.length && bidData.proposedPrice <= lot.bids[lot.bids.length - 1].proposedPrice) {
       throw new BadRequestException('Bid should be higher last proposed bid.');
+    }
+
+    if (bidData.proposedPrice <= lot.currentPrice) {
+      throw new BadRequestException('Bid should be higher current price.');
     }
 
     return await this.bidsRepository.save({

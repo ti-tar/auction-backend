@@ -21,7 +21,7 @@ export class User {
   @IsEmail()
   email: string;
 
-  @Column({ name: 'phone', type: 'varchar', length: 12 }) // '+' and 11 nums
+  @Column({ name: 'phone', type: 'varchar', length: 12 })
   phone: string;
 
   @Exclude()
