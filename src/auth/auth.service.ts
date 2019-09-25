@@ -6,6 +6,8 @@ import { ConfigService } from '../shared/config.service';
 import { LoginSerializerInterceptor } from './serializers/login.interceptor';
 import { LoggerService } from '../shared/logger.service';
 import { EmailService } from '../email/email.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -42,10 +44,10 @@ export class AuthService {
       newUser.password = createUserDto.password;
 
       await this.userService.save(newUser);
-      this.loggerService.log(`New User id ${newUser.id} '${newUser.firstName}'[${newUser.email}] Signed Up!`);
+      this.loggerService.log(`User Signed Up. User '${newUser.firstName}', id: ${newUser.id}, email: ${newUser.email},  status: ${newUser.status}`);
 
       const sentMail = await this.emailService.sendVerificationEmail(newUser);
-      this.loggerService.log(`Verification Email to ${sentMail.envelope.to.join(', ')} sent.`);
+      this.loggerService.log(`User Signed Up. Verification email sent to ${sentMail.envelope.to.join(', ')}`);
 
       return newUser;
 
@@ -63,18 +65,74 @@ export class AuthService {
     }
 
     try {
-      const updatedUser = await this.userService.update(user, {
-        status: 'approved',
-        token: null,
-      });
-      this.loggerService.log(`User '${updatedUser.firstName}' id ${updatedUser.id} approved.`);
+      user.status = 'approved';
+      user.token = null;
+      await this.userService.update(user);
+      this.loggerService.log(`Email verified. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
 
-      const sentMail = await this.emailService.sendApprovalEmail(updatedUser);
+      const sentMail = await this.emailService.sendApprovalEmail(user);
       this.loggerService.log(`Email verified. Success letter sent to ${sentMail.envelope.to.join(', ')}`);
-      return updatedUser;
+
+      return user;
     } catch ( errors ) {
       this.loggerService.error(errors);
       throw new BadRequestException('Error occurred while approving user!');
+    }
+  }
+
+  async forgotPassword(forgotUserDto: ForgotPasswordDto): Promise<User> {
+
+    const user = await this.userService.findByEmail(forgotUserDto.email);
+
+    if (!user) {
+      throw new BadRequestException('No such email.');
+    }
+
+    if (user.status === 'pending') {
+      throw new BadRequestException('You haven\'t been approved.');
+    }
+
+    try {
+      user.token = ConfigService.generateRandomToken();
+      await this.userService.update(user);
+      this.loggerService.log(`Forgot password. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
+
+      const sentMail = await this.emailService.sendForgotPasswordMail(user);
+      this.loggerService.log(`Forgot password. Email sent to ${sentMail.envelope.to.join(', ')}`);
+
+      return user;
+    } catch (error) {
+      this.loggerService.error(error);
+      throw new BadRequestException('Error occurred while updating!');
+    }
+  }
+
+  async resetPassword(resetUserDto: ResetPasswordDto): Promise<User> {
+    const { password, passwordConfirm, token } = resetUserDto;
+    if (password !== passwordConfirm) {
+      throw new BadRequestException('Passwords should not be equal');
+    }
+
+    const user = await this.userService.findByToken(token);
+
+    if (!user) {
+      throw new BadRequestException('No such user.');
+    }
+
+    if (user && user.status !== 'approved') {
+      throw new BadRequestException('Your account were not approved.');
+    }
+
+    try {
+      user.password = ConfigService.getPasswordsHash(password);
+      user.token = null;
+      await this.userService.update(user);
+      this.loggerService.log(`Reset password. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
+
+      return user;
+    } catch (error) {
+      this.loggerService.error(error);
+      throw new BadRequestException('Error occurred during resetting password!');
     }
   }
 
@@ -84,6 +142,7 @@ export class AuthService {
       delete user.password;
       return user;
     }
+    this.loggerService.error(`Failed login attempt. Email: ${email}`);
     return null;
   }
 }

@@ -36,13 +36,24 @@ export class EmailService {
     return this.sendEmail( {
       from: 'Auction Team <from@example.com>',
       to: user.email,
-      subject: 'You was verified!',
-      text: 'Hi! You was verified. Thank you',
-      html: `<h1>Hi!</h1><p>You was verified. Thank you</p>`,
+      subject: 'You were verified!',
+      text: 'Hi! You were verified. Thank you',
+      html: `<h1>Hi!</h1><p>You were verified. Thank you</p>`,
     });
   }
 
-  async sendEmail(emailObject: MailObject): Promise<SentMessageInfo> {
+  sendForgotPasswordMail(user: User): Promise<SentMessageInfo> {
+    const resetPassLink = this.configService.getResetPasswordLink(user.token);
+    return this.sendEmail( {
+      from: 'Auction Team <from@example.com>',
+      to: user.email,
+      subject: 'Email to reset password.',
+      text: 'Hi! Reset pass on auction site. Your link: ' + `${resetPassLink}`,
+      html: `<h1>Hi!</h1><p>Reset pass on auction site.</p><p><a href="${resetPassLink}">Reset email.</a></p>`,
+    });
+  }
+
+  private async sendEmail(emailObject: MailObject): Promise<SentMessageInfo> {
 
     const transportOptions = {
       host: this.configService.get('MAILTRIP_HOST'),

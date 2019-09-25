@@ -12,7 +12,6 @@ import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
 import { User } from '../entities/user';
 import { VadationPipe } from '../pipes/validation.pipe';
-import { LotEditValidation } from '../pipes/lot-edit.validation.pipe';
 import { CreateLotDto } from './dto/create-lot.dto';
 import { CreateBidDto } from '../bids/dto/create-bid.dto';
 import { DeleteResult } from 'typeorm';
@@ -53,7 +52,7 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @UsePipes(new VadationPipe(), new LotEditValidation())
+  @UsePipes(new VadationPipe())
   @UseInterceptors(LotsSerializerInterceptor)
   @Put(':lotId')
   async update(@Param('lotId') lotId: number, @Body() lotData: CreateLotDto): Promise<Lot> {
@@ -67,7 +66,7 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @UsePipes(new VadationPipe(), new LotEditValidation())
+  @UsePipes(new VadationPipe())
   @UseInterceptors(LotsSerializerInterceptor)
   @Post()
   async create(@Body() lotData: CreateLotDto, @UserDecorator() user: User ): Promise<Lot> {
@@ -112,11 +111,11 @@ export class LotsController {
       },
     ),
   )
-  async uploadFile(@UploadedFile() file): Promise<{ fileName: string }> {
+  async uploadFile(@UploadedFile() file, @UserDecorator() user: User): Promise<{ fileName: string }> {
     const fullPath: string = `upload/images/lots/thumb/${file.filename}`;
     try {
       const {width, height, size}: sharp.OutputInfo = await sharp(file.path).resize(200).toFile(fullPath);
-      this.loggerService.log(`File '${file.filename}' thumbed to ${width}x${height}px, size: ${size}b, saved!`);
+      this.loggerService.log(`Upload File. User: id ${user.id}, ${user.firstName}. File '${file.filename}' thumbed to${width}x${height} ${size}b!`);
     } catch (error) {
       this.loggerService.error(error);
       throw new BadRequestException('Error during saving image.');

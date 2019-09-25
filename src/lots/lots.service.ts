@@ -1,6 +1,7 @@
-import { Injectable, Request } from '@nestjs/common';
+import { BadRequestException, Injectable, Request } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getConnection } from 'typeorm';
+import * as moment from 'moment';
+import { Repository } from 'typeorm';
 import { Lot } from '../entities/lot';
 // DTO's
 import { CreateLotDto } from './dto/create-lot.dto';
@@ -32,26 +33,18 @@ export class LotsService {
 
   async update(lotRequest: CreateLotDto, lotId: number) {
 
-    const moment = require('moment');
+    this.lotValidation(lotRequest);
 
-    const {
-      title, image, description, currentPrice,
-      estimatedPrice, startTime, endTime,
-    } = lotRequest;
+    const lot = await this.lotsRepository.findOne(lotId);
 
-    const updatedLot = await this.lotsRepository.update(lotId,
+    await this.lotsRepository.update(lotId,
       {
-        title,
-        image,
-        description,
-        currentPrice,
-        estimatedPrice,
-        startTime: moment(startTime),
-        endTime: moment(endTime),
+        ...lotRequest,
+        startTime: moment(lotRequest.startTime).toDate(),
+        endTime: moment(lotRequest.endTime).toDate(),
       },
     );
-
-    return this.lotsRepository.findOne(lotId);
+    return lot;
   }
 
   async delete(lotId: number) {
@@ -59,26 +52,38 @@ export class LotsService {
   }
 
   async create(lotRequest: CreateLotDto, user: User ) {
-    const moment = require('moment');
 
-    const { title, image, description, currentPrice, estimatedPrice, startTime, endTime } = lotRequest;
+    this.lotValidation(lotRequest);
 
     const newLot = new Lot();
-    newLot.title = title;
-    newLot.image = image;
-    newLot.description = description;
-    newLot.currentPrice = currentPrice;
-    newLot.estimatedPrice = estimatedPrice;
-    newLot.startTime = moment(startTime);
-    newLot.endTime = moment(endTime);
-
-    // todo validation !!!
-
+    newLot.title = lotRequest.title;
+    newLot.image = lotRequest.image;
+    newLot.description = lotRequest.description;
+    newLot.currentPrice = lotRequest.currentPrice;
+    newLot.estimatedPrice = lotRequest.estimatedPrice;
+    newLot.startTime = moment(lotRequest.startTime).toDate();
+    newLot.endTime = moment(lotRequest.endTime).toDate();
     newLot.user = user;
 
-    const savedLot = await this.lotsRepository.save(newLot);
+    return await this.lotsRepository.save(newLot);
+  }
 
-    return savedLot;
+  private lotValidation(values: CreateLotDto) {
+    const { currentPrice, estimatedPrice, startTime, endTime } = values;
 
+    if (estimatedPrice <= currentPrice) {
+      throw new BadRequestException('Estimated price should be less or equal then current.');
+    }
+
+    const startTimeDate = moment(startTime);
+    const endTimeDate = moment(endTime);
+
+    if (!startTimeDate.isValid() || !endTimeDate.isValid() ) {
+      throw new BadRequestException('Lot start or end time is not valid.');
+    }
+
+    if (!endTimeDate.isAfter(startTime)) {
+      throw new BadRequestException('End of lot\'s bidding should not be later it start.');
+    }
   }
 }

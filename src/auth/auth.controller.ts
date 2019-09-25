@@ -10,8 +10,8 @@ import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '../shared/config.service';
 import { LoggerService } from '../shared/logger.service';
-import { ForgotUserDto } from './dto/forgot-user.dto';
-import { ResetUserDto } from './dto/reset-user.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { VerifyUserDto } from './dto/verify-user.dto';
 import { LoginSerializerInterceptor } from './serializers/login.interceptor';
@@ -26,7 +26,6 @@ export class AuthController {
     private readonly userService: UsersService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
-    private readonly logger: LoggerService,
   ) {}
 
   @UseGuards(AuthGuard('local'))
@@ -58,60 +57,18 @@ export class AuthController {
     };
   }
 
+  @UsePipes(new VadationPipe())
   @Post('forgot_password')
-  async forgotPassword(@Body() forgotData: ForgotUserDto) {
-
-    const user = await this.userService.findByEmail(forgotData.email);
-
-    if (!user) {
-      throw new BadRequestException('No such email.');
-    }
-
-    if (user.status === 'pending') {
-      throw new BadRequestException('You haven\'t been approved.');
-    }
-
-    const token = ConfigService.generateRandomToken();
-
-    await this.userService.update(user, { token });
-
-    // send an email with reset link
-    const resetPassLink = this.configService.getResetPasswordLink(token);
-    await this.emailService.sendEmail( {
-      from: 'Auction Team <from@example.com>',
-      to: user.email,
-      subject: 'Email to reset password.',
-      text: 'Hi! Reset pass on auction site. Your link: ' + `${resetPassLink}`,
-      html: `<h1>Hi!</h1><p>Reset pass on auction site.</p><p><a href="${resetPassLink}">Reset email.</a></p>`,
-    });
-
+  async forgotPassword(@Body() forgotData: ForgotPasswordDto): Promise<{ message: string }> {
+    await this.authService.forgotPassword(forgotData);
     return { message: 'Letter sent. Check your mailbox' };
   }
 
+  @UsePipes(new VadationPipe())
   @Post('reset_password')
-  async resetPassword(@Body() resetData: ResetUserDto) {
-
-    const { password, passwordConfirmation, token } = resetData;
-    if (!password || !passwordConfirmation || (password !== passwordConfirmation)) {
-      throw new BadRequestException('Passwords not equal');
-    }
-
-    const user = await this.userService.findByToken(token);
-
-    if (!user) {
-      throw new BadRequestException('No such user.');
-    }
-
-    if (user && user.status !== 'approved') {
-      throw new BadRequestException('Your account was not approved.');
-    }
-
-    await this.userService.update(user, {
-      password: ConfigService.getPasswordsHash('password'),
-      token: null,
-    });
-
-    return { message: 'Password were reset successfully' };
+  async resetPassword(@Body() resetUserDto: ResetPasswordDto): Promise<{ message: string }> {
+    await this.authService.resetPassword(resetUserDto);
+    return { message: 'Password was reset successfully' };
   }
 
   @UseGuards(AuthGuard('jwt'))
