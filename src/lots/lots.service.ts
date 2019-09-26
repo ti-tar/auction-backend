@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable, Request } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
-import { getRepository, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Lot } from '../entities/lot';
 // DTO's
 import { CreateLotDto } from './dto/create-lot.dto';
