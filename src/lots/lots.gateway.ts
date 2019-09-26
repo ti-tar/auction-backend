@@ -11,6 +11,11 @@ import * as moment from 'moment';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../shared/logger.service';
 
+interface WebsocketResponseInterface {
+  message: string;
+  params?: {};
+}
+
 @Injectable()
 @WebSocketGateway()
 export class LotsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -19,7 +24,7 @@ export class LotsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   ) {}
 
   @WebSocketServer()
-  server;
+  private server;
 
   afterInit(server: Server) {
      this.loggerService.log('LotsGateway websocket has been initialized.');
@@ -29,15 +34,20 @@ export class LotsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('checkServerConnection')
   checkServerConnection(client: Socket): void {
     const resp = 'Server time: ' + moment().format('DD MMM YYYY, hh:mm:ss');
-    client.emit('checkBrowserConnection', 'Connected! ' + resp);
+    client.emit('checkBrowserConnection', {message: resp });
   }
 
   handleConnection(client: any, ...args): any {
-    client.emit('connection', 'connected ');
+    client.emit('connection');
     this.loggerService.log('LotsGateway handleConnection method.');
   }
 
   handleDisconnect(client: any): void {
     this.loggerService.log('LotsGateway handleDisconnect method.');
+  }
+
+  bidsUpdate(response: WebsocketResponseInterface) {
+    this.server.emit('bidsUpdated', response);
+    this.loggerService.log(`WS. Bids Updated. ${response.message}`);
   }
 }
