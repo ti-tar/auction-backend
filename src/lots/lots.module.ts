@@ -13,15 +13,17 @@ import { ConfigService } from '../shared/config.service';
 import { JwtModule } from '@nestjs/jwt';
 import { SECRET } from '../config';
 import { LotsGateway } from './lots.gateway';
+import { OrdersService } from '../orders/orders.service';
+import { Order } from '../entities/order';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Lot, User, Bid]),
+    TypeOrmModule.forFeature([Lot, User, Bid, Order]),
     PassportModule,
     JwtModule.register({ secretOrPrivateKey: SECRET }),
   ],
   providers: [
-    LotsService, UsersService, BidsService, LoggerService, ConfigService, LotsGateway,
+    LotsService, UsersService, BidsService, LoggerService, ConfigService, LotsGateway, OrdersService,
   ],
   controllers: [LotsController],
 })

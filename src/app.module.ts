@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EmailService } from './email/email.service';
 import { LoggerService } from './shared/logger.service';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { LoggerService } from './shared/logger.service';
       inject: [ConfigService],
       useFactory: ( configService: ConfigService ) => configService.typeOrmConfig,
     }),
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [

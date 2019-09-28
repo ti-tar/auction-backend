@@ -1,17 +1,19 @@
 import { BadRequestException, Body, Injectable, Req } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
 import { CreateBidDto } from './dto/create-bid.dto';
 import { User } from '../entities/user';
 import { LotsGateway } from '../lots/lots.gateway';
+import { OrdersService } from '../orders/orders.service';
 
 @Injectable()
 export class BidsService {
   constructor(
     @InjectRepository(Bid) private bidsRepository: Repository<Bid>,
     private readonly lotsGateway: LotsGateway,
+    private readonly ordersService: OrdersService,
   ) {}
 
   async findAllByLotId(lotId: number): Promise<Bid[]> {
@@ -55,6 +57,11 @@ export class BidsService {
         lotId: lot.id,
       },
     });
+
+    if ( bidData.proposedPrice >= lot.estimatedPrice ) {
+      await this.ordersService.create();
+      // todo email and etc
+    }
 
     return savedBid;
   }
