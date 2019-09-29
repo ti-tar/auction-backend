@@ -7,16 +7,23 @@ import { Lot } from '../entities/lot';
 import { CreateLotDto } from './dto/create-lot.dto';
 import { User } from '../entities/user';
 import { LoggerService } from '../shared/logger.service';
+import { ConfigService } from '../shared/config.service';
 
 @Injectable()
 export class LotsService {
   constructor(
     @InjectRepository(Lot) private lotsRepository: Repository<Lot>,
     private readonly loggerService: LoggerService,
+    private readonly configService: ConfigService,
   ) {}
 
-  async findAll(): Promise<Lot[]> {
-    return this.lotsRepository.find({ relations: ['user', 'bids'] });
+  async findAll(page = 1): Promise<Lot[]> {
+    const itemPerPage = parseInt(this.configService.get('PAGINATION_LOTS_ITEMS_PER_PAGE'), 10);
+    return this.lotsRepository.find({
+      relations: ['user', 'bids'],
+      take: itemPerPage,
+      skip: itemPerPage * (page - 1),
+    });
   }
 
   async findAllByUserId(id: number): Promise<Lot[]> {
