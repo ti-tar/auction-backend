@@ -17,12 +17,12 @@ import { OrdersModule } from './orders/orders.module';
     LotsModule,
     UsersModule,
     AuthModule,
+    OrdersModule,
     TypeOrmModule.forRootAsync({
       imports: [SharedModule],
       inject: [ConfigService],
-      useFactory: ( configService: ConfigService ) => configService.typeOrmConfig,
+      useFactory: (configService: ConfigService) => configService.typeOrmConfig,
     }),
-    OrdersModule,
   ],
   controllers: [AppController],
   providers: [
