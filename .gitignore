@@ -391,3 +391,4 @@ package-lock.json
 
 logs
 
+*.env
