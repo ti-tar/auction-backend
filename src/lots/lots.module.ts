@@ -23,7 +23,7 @@ import { DoneCallback, Job, Queue } from 'bull';
     TypeOrmModule.forFeature([Lot, User, Bid, Order]),
     PassportModule,
     JwtModule.register({ secretOrPrivateKey: SECRET }),
-    BullModule.forRoot({
+    BullModule.register({
       name: 'store',
       options: {
         redis: {
