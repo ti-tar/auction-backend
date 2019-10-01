@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
-
 import { SnakeNamingStrategy } from '../snake-naming.strategy';
 import { User } from '../entities/user';
 import { createHmac } from 'crypto';
@@ -17,9 +16,7 @@ export class ConfigService {
     private readonly jwtService: JwtService,
   ) {
     const nodeEnv = this.nodeEnv;
-    dotenv.config({
-      path: `.${nodeEnv}.env`,
-    });
+    dotenv.config({ path: `.env.${nodeEnv}` });
 
     for (const envName of Object.keys(process.env)) {
       process.env[envName] = process.env[envName].replace(/\\n/g, '\n');
@@ -68,28 +65,7 @@ export class ConfigService {
   }
 
   get typeOrmConfig(): TypeOrmModuleOptions {
-    let entities = [__dirname + '/../entities/**{.ts,.js}'];
-    let migrations = [__dirname + '/../migrations/**{.ts,.js}'];
-
-    if (module.hot) {
-      const entityContext = require.context('./../entities', true, /\.ts$/);
-      entities = entityContext.keys().map((id) => {
-        const entityModule = entityContext(id);
-        const [entity] = Object.values(entityModule);
-        return entity;
-      });
-
-      const migrationContext = require.context('./../migrations', false, /\.ts$/);
-      migrations = migrationContext.keys().map((id) => {
-        const migrationModule = migrationContext(id);
-        const [migration] = Object.values(migrationModule);
-        return migration;
-      });
-    }
-
     return {
-      entities,
-      migrations,
       synchronize: true,
       keepConnectionAlive: true,
       type: 'postgres',
@@ -101,6 +77,11 @@ export class ConfigService {
       migrationsRun: true,
       logging: this.nodeEnv === 'development',
       namingStrategy: new SnakeNamingStrategy(),
+      entities: [__dirname + '/../entities/**{.ts,.js}'],
+      migrations: [__dirname + '/../migrations/**{.ts,.js}'],
+      cli: {
+        migrationsDir: `${__dirname}/../migrations/`,
+      },
     };
   }
 }
