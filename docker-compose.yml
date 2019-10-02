@@ -8,6 +8,14 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: auction
+  test_db:
+    image: postgres:10-alpine
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: user_test
+      POSTGRES_PASSWORD: password_test
+      POSTGRES_DB: auction_test
   redis:
     image: redis:alpine
     ports:

@@ -1,20 +1,25 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import { SnakeNamingStrategy } from './src/snake-naming.strategy';
 
-dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-for (const envName of Object.keys(process.env)) {
-  process.env[envName] = process.env[envName].replace(/\\n/g, '\n');
+if (result.error) {
+  throw result.error;
 }
 
+Object.keys(result.parsed).forEach(envKey => {
+  process.env[envKey] = result.parsed[envKey];
+});
+
 module.exports = {
-  type: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  username: 'user',
-  password: 'password',
-  database: 'auction',
   namingStrategy: new SnakeNamingStrategy(),
+  type: 'postgres',
+  host: process.env.POSTGRES_HOST,
+  port: parseInt(process.env.POSTGRES_PORT, 10),
+  username: process.env.POSTGRES_USERNAME,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DATABASE,
+  synchronize: false,
   entities: [
     "src/entities/**{.ts,.js}",
   ],

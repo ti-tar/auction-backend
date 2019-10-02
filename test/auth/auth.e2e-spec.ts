@@ -1,7 +1,7 @@
+import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 import * as faker from 'faker';
 import { AppModule } from '../../src/app.module';
-import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '../../src/shared/config.service';
 import { LoggerService } from '../../src/shared/logger.service';
