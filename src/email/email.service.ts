@@ -42,7 +42,7 @@ export class EmailService {
     });
   }
 
-  sendForgotPasswordMail(user: User): Promise<SentMessageInfo> {
+  async sendForgotPasswordMail(user: User): Promise<SentMessageInfo> {
     const resetPassLink = this.configService.getResetPasswordLink(user.token);
     return this.sendEmail( {
       from: 'Auction Team <from@example.com>',

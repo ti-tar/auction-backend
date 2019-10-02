@@ -7,9 +7,9 @@ import { ConfigService } from '../../src/shared/config.service';
 import { LoggerService } from '../../src/shared/logger.service';
 import { CreateUserDto } from '../../src/auth/dto/create-user.dto';
 import { LoginUserDto } from '../../src/auth/dto/login-user.dto';
-import { VerifyUserDto } from '../../src/auth/dto/verify-user.dto';
 import { EmailService } from '../../src/email/email.service';
-import { consoleTestResultHandler } from 'tslint/lib/test';
+import MockedEmailService from '../mockedServices/mockedEmail.service';
+import MockedLoggerService from '../mockedServices/mockedLogger.service';
 
 describe('AuthController', () => {
 
@@ -29,34 +29,17 @@ describe('AuthController', () => {
     password: '123',
   };
 
-  const mockedRandomToken = 'test_random_token';
-  const mockedJWTToken = 'test_jwt_token';
+  const mockedRandomToken = `test_random_token_${mockedSignUpUser.firstName}`;
+  const newResetPassword = 'new_password';
 
-  const mockedVerifyEmail: VerifyUserDto = {
-    token: mockedRandomToken,
-  };
-
-  class ConfigTestService extends ConfigService {
-    generateJWT = () => mockedJWTToken;
-  }
-
-  ConfigService.generateRandomToken = () => mockedVerifyEmail.token;
-
-  // tslint:disable-next-line:max-classes-per-file
-  class LoggerTestService extends LoggerService {
-    log(message: string): void { return; }
-    error(errorOrMessage: any): void { return; }
-  }
+  ConfigService.generateRandomToken = () => mockedRandomToken;
 
   beforeAll(async () => {
-    // @ts-ignore
     const module = await Test.createTestingModule({
-      imports: [
-        AppModule,
-      ],
+      imports: [AppModule],
     })
-      .overrideProvider(ConfigService).useClass(ConfigTestService)
-      .overrideProvider(LoggerService).useClass(LoggerTestService)
+      .overrideProvider(EmailService).useClass(MockedEmailService())
+      .overrideProvider(LoggerService).useClass(MockedLoggerService())
       .compile();
 
     app = module.createNestApplication();
@@ -72,13 +55,11 @@ describe('AuthController', () => {
     await request(server)
       .post('/auth/login/')
       .send(mockedAuthUser)
-      .expect(201, { resource:
-          { id: 1,
-            firstName: 'user1',
-            email: 'user1@gmail.com',
-            token: mockedJWTToken,
-          },
-        meta: {} });
+      .expect(201)
+      .expect((response: request.Response) => {
+        expect(response.body.resource.firstName).toBe('user1');
+        expect(response.body.resource.email).toBe('user1@gmail.com');
+      });
   });
 
   it('POST /auth/login. Such email does not exist', async () => {
@@ -93,7 +74,7 @@ describe('AuthController', () => {
       });
   });
 
-  it('POST /auth/login, Invalid password', async () => {
+  it('POST /auth/login. Invalid password', async () => {
     await request(server)
       .post('/auth/login/')
       .send({...mockedAuthUser, password: 'invalid password'})
@@ -137,14 +118,10 @@ describe('AuthController', () => {
     // verify email
     await request(server)
       .post('/auth/verify/email')
-      .send({ token: mockedVerifyEmail.token })
+      .send({ token: mockedRandomToken })
       .expect(201)
       .expect((response: request.Response) => {
-        expect(response.body.resource)
-          .toMatchObject({
-            email: mockedSignUpUser.email,
-            token: mockedJWTToken,
-          });
+        expect(response.body.resource).toMatchObject({ email: mockedSignUpUser.email });
         expect(typeof response.body.resource.id).toBe('number');
       });
 
@@ -155,18 +132,56 @@ describe('AuthController', () => {
       .expect(201);
   });
 
-  // it('POST /auth/forgot_password', async () => {
-  //   await request(server)
-  //     .post('/auth/forgot_password')
-  //     .send({ email: mockedSignUpUser.email })
-  //     .expect(400)
-  //     .expect((response: request.Response) => {
-  //       console.log(response.body)
-  //       expect(response.body.message).toBe('Letter sent. Check your mailbox');
-  //     });
-  // });
+  it('POST /auth/forgot_password', async () => {
+    await request(server)
+      .post('/auth/forgot_password')
+      .send({ email: mockedSignUpUser.email })
+      .expect(201)
+      .expect((response: request.Response) => {
+        expect(response.body.message).toBe('Letter sent. Check your mailbox');
+      });
+  });
 
-  // it('POST /auth/reset_password' );
+  it('POST /auth/reset_password. Check if password reset, login with old and new passwords', async () => {
+    await request(server)
+      .post('/auth/reset_password')
+      .send({ password: newResetPassword, passwordConfirm: newResetPassword, token: mockedRandomToken })
+      .expect(201)
+      .expect((response: request.Response) => {
+        expect(response.body.message).toBe('Password was reset successfully');
+      });
 
-  it.todo('GET  /auth/profile');
+    await request(server)
+      .post('/auth/login/')
+      .send({email: mockedSignUpUser.email, password: mockedSignUpUser.password})
+      .expect(401);
+
+    await request(server)
+      .post('/auth/login/')
+      .send({email: mockedSignUpUser.email, password: newResetPassword})
+      .expect(201);
+  });
+
+  it('GET  /auth/profile. Login, get token, get own profile info', async () => {
+    let token = '';
+    await request(server)
+      .post('/auth/login/')
+      .send({email: mockedSignUpUser.email, password: newResetPassword})
+      .expect(201)
+      .expect((response: request.Response) => {
+        expect(response.body.resource.email).toBe(mockedSignUpUser.email);
+        token = response.body.resource.token;
+      });
+
+    await request(server)
+      .get('/auth/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect((response: request.Response) => {
+        expect(response.body.email).toBe(mockedSignUpUser.email);
+        expect(response.body.phone).toBe(mockedSignUpUser.phone);
+        expect(response.body.firstName).toBe(mockedSignUpUser.firstName);
+        expect(response.body.status).toBe('approved');
+      });
+  });
 });

@@ -391,4 +391,6 @@ package-lock.json
 
 logs
 
-*.env
+.env.*
+
+upload

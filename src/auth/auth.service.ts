@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Body, UseInterceptors } from '@nestjs/common';
+import { Injectable, BadRequestException, UseInterceptors } from '@nestjs/common';
 import { User } from '../entities/user';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from '../users/users.service';
@@ -96,11 +96,8 @@ export class AuthService {
     await this.userService.update(user);
     this.loggerService.log(`Forgot password. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
     try {
-
-
       const sentMail = await this.emailService.sendForgotPasswordMail(user);
       this.loggerService.log(`Forgot password. Email sent to ${sentMail.envelope.to.join(', ')}`);
-
       return user;
     } catch (error) {
       this.loggerService.error(error);
