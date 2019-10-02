@@ -4,6 +4,8 @@
 
 ``` docker-compose up -d ```
 
+``` docker-compose up -d --no-recreate```
+
 ``` docker-compose start|restart|stop [-f custom-docker-compose-config.yml] ```
  
 ``` docker-compose down ```

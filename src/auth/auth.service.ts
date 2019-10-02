@@ -92,10 +92,11 @@ export class AuthService {
       throw new BadRequestException('You haven\'t been approved.');
     }
 
+    user.token = ConfigService.generateRandomToken();
+    await this.userService.update(user);
+    this.loggerService.log(`Forgot password. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
     try {
-      user.token = ConfigService.generateRandomToken();
-      await this.userService.update(user);
-      this.loggerService.log(`Forgot password. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
+
 
       const sentMail = await this.emailService.sendForgotPasswordMail(user);
       this.loggerService.log(`Forgot password. Email sent to ${sentMail.envelope.to.join(', ')}`);

@@ -45,7 +45,7 @@ export class AuthController {
     return await this.authService.singUp(createUserDto);
   }
 
-  @UsePipes(new ValidationPipe())
+  // @UsePipes(new ValidationPipe())
   @UseInterceptors(LoginSerializerInterceptor)
   @Post('verify/email')
   async verifyEmail(@Body() verifyUserData: VerifyUserDto): Promise<{user: User, jwtToken: string}> {
