@@ -3,36 +3,26 @@ import { JwtService } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
+import { createHmac } from 'crypto';
 import { SnakeNamingStrategy } from '../snake-naming.strategy';
 import { User } from '../entities/user';
-import { createHmac } from 'crypto';
-
-declare const module: any;
-declare const require: any;
 
 @Injectable()
 export class ConfigService {
   constructor(
     private readonly jwtService: JwtService,
   ) {
-    const nodeEnv = this.nodeEnv;
-    dotenv.config({ path: `.env.${nodeEnv}` });
-
+    this.nodeEnv = this.get('NODE_ENV') || 'development';
+    dotenv.config({ path: `.env.${this.nodeEnv}` });
     for (const envName of Object.keys(process.env)) {
       process.env[envName] = process.env[envName].replace(/\\n/g, '\n');
     }
   }
 
+  nodeEnv;
+
   public get(key: string): string {
     return process.env[key];
-  }
-
-  public getNumber(key: string): number {
-    return Number(this.get(key));
-  }
-
-  get nodeEnv(): string {
-    return this.get('NODE_ENV') || 'development';
   }
 
   public static generateRandomToken(): string {
@@ -70,12 +60,12 @@ export class ConfigService {
       keepConnectionAlive: true,
       type: 'postgres',
       host: this.get('POSTGRES_HOST'),
-      port: this.getNumber('POSTGRES_PORT'),
+      port: parseInt(this.get('POSTGRES_PORT'), 10),
       username: this.get('POSTGRES_USERNAME'),
       password: this.get('POSTGRES_PASSWORD'),
       database: this.get('POSTGRES_DATABASE'),
       migrationsRun: true,
-      logging: this.nodeEnv === 'development',
+      logging: this.get('NODE_ENV') === 'development',
       namingStrategy: new SnakeNamingStrategy(),
       entities: [__dirname + '/../entities/**{.ts,.js}'],
       migrations: [__dirname + '/../migrations/**{.ts,.js}'],

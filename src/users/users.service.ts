@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeleteResult, UpdateResult } from 'typeorm';
 import { User } from '../entities/user';
-import { LoginUserDto } from '../auth/dto/login-user.dto';
-import { ConfigService } from '../shared/config.service';
 
 @Injectable()
 export class UsersService {
@@ -12,17 +10,12 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+  async findAll(options = {}): Promise<User[]> {
+    return await this.userRepository.find(options);
   }
 
-  async findOne(loginUserDto: LoginUserDto): Promise<User> {
-    const findOneOptions = {
-      email: loginUserDto.email,
-      password: ConfigService.getPasswordsHash(loginUserDto.password),
-    };
-
-    return await this.userRepository.findOne(findOneOptions);
+  async findOne(options = {}): Promise<User> {
+    return await this.userRepository.findOne(options);
   }
 
   async findOneById(id: number): Promise<User> {

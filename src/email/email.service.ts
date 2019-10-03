@@ -57,7 +57,7 @@ export class EmailService {
 
     const transportOptions = {
       host: this.configService.get('MAILTRIP_HOST'),
-      port: this.configService.getNumber('MAILTRIP_PORT'),
+      port: parseInt(this.configService.get('MAILTRIP_PORT'), 10),
       auth: {
         user: this.configService.get('MAILTRIP_USER'),
         pass: this.configService.get('MAILTRIP_PASS'),

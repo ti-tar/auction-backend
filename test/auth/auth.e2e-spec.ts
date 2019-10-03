@@ -8,18 +8,17 @@ import { LoggerService } from '../../src/shared/logger.service';
 import { CreateUserDto } from '../../src/auth/dto/create-user.dto';
 import { LoginUserDto } from '../../src/auth/dto/login-user.dto';
 import { EmailService } from '../../src/email/email.service';
-import MockedEmailService from '../mockedServices/mockedEmail.service';
-import MockedLoggerService from '../mockedServices/mockedLogger.service';
+import { UsersService } from '../../src/users/users.service';
+import MockedEmailService from '../services/mockedEmail.service';
+import MockedLoggerService from '../services/mockedLogger.service';
+import { User } from '../../src/entities/user';
 
 describe('AuthController', () => {
 
   let app: INestApplication;
   let server;
-
-  const mockedAuthUser: LoginUserDto = {
-    email: 'user1@gmail.com',
-    password: '123',
-  };
+  let approvedUser: User;
+  let mockedAuthUser: LoginUserDto;
 
   const mockedSignUpUser: CreateUserDto = {
     firstName: faker.name.firstName(),
@@ -42,6 +41,16 @@ describe('AuthController', () => {
       .overrideProvider(LoggerService).useClass(MockedLoggerService())
       .compile();
 
+    approvedUser = await module.get(UsersService).findOne({ where: {status: 'approved'}, take: 1 });
+    if (!approvedUser) {
+      throw new Error('Oops! No approved users in db');
+    }
+
+    mockedAuthUser = {
+      email: approvedUser.email,
+      password: '123',
+    };
+
     app = module.createNestApplication();
     await app.init();
     server = app.getHttpServer();
@@ -57,8 +66,8 @@ describe('AuthController', () => {
       .send(mockedAuthUser)
       .expect(201)
       .expect((response: request.Response) => {
-        expect(response.body.resource.firstName).toBe('user1');
-        expect(response.body.resource.email).toBe('user1@gmail.com');
+        expect(response.body.resource.firstName).toBe(approvedUser.firstName);
+        expect(response.body.resource.email).toBe(approvedUser.email);
       });
   });
 
