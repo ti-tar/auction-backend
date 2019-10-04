@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
 
-import * as Path from 'path';
-import * as fs from 'fs';
-
 import { DatabaseService } from '../../test/database/database.service';
 import { LoggerService } from './logger.service';
 import { EntityMetadata } from 'typeorm';
@@ -28,8 +25,6 @@ export class TestUtilsService {
     this.loggerService.log('Clear DB...');
     const entities = await this.getEntities();
     await this.truncateAll(entities);
-
-    // await this.loadAll(entities);
   }
 
   async getEntities(): Promise<EntityMetadata[]> {
@@ -58,25 +53,6 @@ export class TestUtilsService {
         this.loggerService.error(`Error occurred during cleaning test db: ${error}`);
         throw new Error(`ERROR: Cleaning test db: ${error}`);
       }
-    }
-  }
-
-  async loadAll(entities) {
-    try {
-      for (const entity of entities) {
-        const repository = await this.databaseService.getRepository(entity.name);
-        const fixtureFile = Path.join(__dirname, `../test/fixtures/${entity.name}.json`);
-        if (fs.existsSync(fixtureFile)) {
-          const items = JSON.parse(fs.readFileSync(fixtureFile, 'utf8'));
-          await repository
-            .createQueryBuilder(entity.name)
-            .insert()
-            .values(items)
-            .execute();
-        }
-      }
-    } catch (error) {
-      throw new Error(`ERROR [TestUtils.loadAll()]: Loading fixtures on test db: ${error}`);
     }
   }
 }
