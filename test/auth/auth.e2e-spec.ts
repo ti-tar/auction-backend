@@ -11,13 +11,11 @@ import { EmailService } from '../../src/email/email.service';
 import { UsersService } from '../../src/users/users.service';
 import MockedEmailService from '../services/mockedEmail.service';
 import MockedLoggerService from '../services/mockedLogger.service';
-import { User } from '../../src/entities/user';
 
 describe('AuthController', () => {
 
   let app: INestApplication;
   let server;
-  let approvedUser: User;
   let mockedAuthUser: LoginUserDto;
 
   const mockedSignUpUser: CreateUserDto = {
@@ -41,9 +39,9 @@ describe('AuthController', () => {
       .overrideProvider(LoggerService).useClass(MockedLoggerService())
       .compile();
 
-    approvedUser = await module.get(UsersService).findOne({ where: {status: 'approved'}, take: 1 });
+    const approvedUser = await module.get(UsersService).findOne({ where: {status: 'approved'}, take: 1 });
     if (!approvedUser) {
-      throw new Error('Oops! No approved users in db');
+      throw new Error('No approved users in db');
     }
 
     mockedAuthUser = {
@@ -66,8 +64,7 @@ describe('AuthController', () => {
       .send(mockedAuthUser)
       .expect(201)
       .expect((response: request.Response) => {
-        expect(response.body.resource.firstName).toBe(approvedUser.firstName);
-        expect(response.body.resource.email).toBe(approvedUser.email);
+        expect(response.body.resource.email).toBe(mockedAuthUser.email);
       });
   });
 
