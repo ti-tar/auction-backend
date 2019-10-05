@@ -1,6 +1,7 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
+import * as Redis from 'ioredis';
 import { LotsController } from './lots.controller';
 import { Lot } from '../entities/lot';
 import { User } from '../entities/user';
@@ -15,8 +16,13 @@ import { SECRET } from '../config';
 import { LotsGateway } from './lots.gateway';
 import { OrdersService } from '../orders/orders.service';
 import { Order } from '../entities/order';
-import { BullModule, InjectQueue } from 'nest-bull';
-import { DoneCallback, Job, Queue } from 'bull';
+import { BullModule } from 'nest-bull';
+import { LotJobsService, lotQueueName } from './lot-jobs.service';
+
+const configRedis: Redis.RedisOptions = {
+  host: 'localhost',
+  port: 6379,
+};
 
 @Module({
   imports: [
@@ -24,45 +30,16 @@ import { DoneCallback, Job, Queue } from 'bull';
     PassportModule,
     JwtModule.register({ secretOrPrivateKey: SECRET }),
     BullModule.register({
-      name: 'store',
+      name: lotQueueName,
       options: {
-        redis: {
-          port: 6379,
-        },
+        redis: configRedis,
       },
-      processors: [{
-        name: 'lot_job_name_1',
-        callback: async (job) => {
-          return await `${job.id}. Yeah!`;
-        },
-      }],
     }),
   ],
   providers: [
-    LotsService, UsersService, BidsService, LoggerService, ConfigService, LotsGateway, OrdersService,
+    LotsService, UsersService, BidsService, LoggerService, ConfigService,
+    LotsGateway, OrdersService, LotJobsService,
   ],
   controllers: [LotsController],
 })
-export class LotsModule implements OnModuleInit {
-  constructor(
-    @InjectQueue('store') readonly queue: Queue,
-    readonly loggerService: LoggerService,
-  ) {}
-
-  onModuleInit() {
-    this.queue.add('lot_job_name_1', { someKey: 'someValue' }, {
-      repeat: { cron: '* * * * *', tz: 'Europe/Kiev' },
-      removeOnFail: false,
-    }).then(job => {
-      this.loggerService.log(`This job ${job.name} starts every minute`);
-    });
-
-    this.queue.on('completed', (job, result) => {
-      this.loggerService.log(`Job ${job.name} completed! Result: ${result}`);
-    });
-
-    this.queue.on('failed', (job, err) => {
-      this.loggerService.error(err);
-    });
-  }
-}
+export class LotsModule {}

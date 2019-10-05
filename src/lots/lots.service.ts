@@ -7,11 +7,13 @@ import { Lot } from '../entities/lot';
 import { CreateLotDto } from './dto/create-lot.dto';
 import { User } from '../entities/user';
 import { LoggerService } from '../shared/logger.service';
+import { LotJobsService } from './lot-jobs.service';
 
 @Injectable()
 export class LotsService {
   constructor(
     @InjectRepository(Lot) private lotsRepository: Repository<Lot>,
+    private readonly lotJobsService: LotJobsService,
     private readonly loggerService: LoggerService,
   ) {}
 
@@ -65,7 +67,11 @@ export class LotsService {
   async create(lotRequest: CreateLotDto, user: User ) {
     try {
       const newLot = await this.lotsRepository.save(this.handleLot(new Lot(), lotRequest, user));
+      const delay: number = moment(newLot.endTime).valueOf() - moment().valueOf();
       this.loggerService.log(`Lot Created. Lot: id ${newLot.id} '${newLot.title}'. User '${user.firstName}', id: ${user.id}.`);
+      await this.lotJobsService.addJob('setEndLotTimeJob', newLot, { delay });
+      // tslint:disable-next-line:max-line-length
+      this.loggerService.log(`Job. Lot Create Event. Set job to lot endTime handling. Lot id: ${newLot.id}. Job start/endTime - ${moment(newLot.startTime).toISOString()}/${moment(newLot.endTime).toISOString()}. Delay time: ${delay / 1000} seconds.`);
       return newLot;
     } catch ( errors ) {
       this.loggerService.error(errors);
