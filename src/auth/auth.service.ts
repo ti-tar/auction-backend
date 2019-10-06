@@ -8,6 +8,7 @@ import { LoggerService } from '../shared/logger.service';
 import { EmailService } from '../email/email.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,8 +20,12 @@ export class AuthService {
   ) {}
 
   @UseInterceptors(LoginSerializerInterceptor)
-  async loginUser(loginUserDto): Promise<User> {
+  async loginUser(loginUserDto: LoginUserDto): Promise<User> {
     const user = await this.userService.findByEmail(loginUserDto.email);
+
+    if (!user) {
+      throw new BadRequestException('User doesn\'t exist');
+    }
 
     if (user.status !== 'approved') {
       throw new BadRequestException('Your email is not verified yet. Check your email and try again.');
@@ -114,11 +119,11 @@ export class AuthService {
     const user = await this.userService.findByToken(token);
 
     if (!user) {
-      throw new BadRequestException('No such user.');
+      throw new BadRequestException('No user with such token.');
     }
 
     if (user && user.status !== 'approved') {
-      throw new BadRequestException('Your account were not approved.');
+      throw new BadRequestException('Your account was not been approved.');
     }
 
     try {
@@ -134,10 +139,9 @@ export class AuthService {
     }
   }
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<User> {
     const user = await this.userService.findByEmail(email);
     if (user && user.password === ConfigService.getPasswordsHash(password)) {
-      delete user.password;
       return user;
     }
     this.loggerService.error(`Failed login attempt. Email: ${email}`);

@@ -30,14 +30,6 @@ export class UsersService {
     return await this.userRepository.save(user);
   }
 
-  async delete(email: string): Promise<DeleteResult> {
-    return await this.userRepository.delete({ email });
-  }
-
-  async login(email: string): Promise<User> {
-    return await this.findByEmail(email);
-  }
-
   async findByEmail(email: string): Promise<User> {
     return await this.userRepository.findOne({ email });
   }
