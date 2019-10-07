@@ -17,8 +17,8 @@ export class LotsService {
     private readonly loggerService: LoggerService,
   ) {}
 
-  async findAll(): Promise<Lot[]> {
-    return this.lotsRepository.find({ relations: ['user', 'bids'] });
+  async findLotsInProcess(): Promise<Lot[]> {
+    return this.lotsRepository.find({ where: { status: 'inProcess' }, relations: ['user', 'bids'] });
   }
 
   async findAllByUserId(id: number): Promise<Lot[]> {

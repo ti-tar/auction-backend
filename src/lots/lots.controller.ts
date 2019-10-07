@@ -20,7 +20,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { LoggerService } from '../shared/logger.service';
 import { LotsSerializerInterceptor } from './serializers/lots.interceptor';
 import { BidsSerializerInterceptor } from '../bids/serializers/bids.interceptor';
-import { UserDecorator } from '../users/user.decorator';
+import { UserDecorator, UserDecoratorInterface } from '../users/user.decorator';
 import { LotEditValidationPipe } from '../pipes/lot-edit-validation-pipe.service';
 
 @Controller('lots')
@@ -34,14 +34,14 @@ export class LotsController {
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
   @Get()
-  async findAll(): Promise<Lot[]> {
-    return this.lotsService.findAll();
+  async findLotsInProcess(): Promise<Lot[]> {
+    return this.lotsService.findLotsInProcess();
   }
 
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
   @Get('own/bids')
-  async findLotsWithOwnBids(@UserDecorator() user: User): Promise<Lot[]> {
+  async findLotsWithOwnBids(@UserDecorator() user: UserDecoratorInterface): Promise<Lot[]> {
     return this.lotsService.findLotsByBidUserId(user.id);
   }
 

@@ -6,3 +6,16 @@ export const UserDecorator = createParamDecorator((data, req) => {
   }
   return req.user;
 });
+
+export interface UserDecoratorInterface {
+  lots: null;
+  firstName: string;
+  lastName: string;
+  password: string;
+  phone: string;
+  bids: null;
+  id: number;
+  email: string;
+  status: string;
+  token: string;
+}
