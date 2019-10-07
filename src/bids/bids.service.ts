@@ -32,6 +32,10 @@ export class BidsService {
       throw new BadRequestException('Lot info error');
     }
 
+    if (lot.status !== 'inProcess') {
+      throw new BadRequestException(`You can bid only lots with status 'inProcess'.`);
+    }
+
     if (lot.user.id === user.id) {
       throw new BadRequestException('You can\'t bid to your own lots');
     }

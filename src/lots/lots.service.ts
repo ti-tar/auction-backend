@@ -57,8 +57,20 @@ export class LotsService {
     if (lot.status !== 'pending') {
       throw new BadRequestException('Only lot with status pending might be set to isProcessed status.');
     }
-
+    lot.startTime = moment().toDate();
     lot.status = 'inProcess';
+
+    try {
+      await this.lotsRepository.save(lot);
+      const delay: number = moment(lot.endTime).valueOf() - moment().valueOf();
+      this.loggerService.log(`Lot Created. Lot: id ${lot.id} '${lot.title}'. User '${user.firstName}', id: ${user.id}.`);
+      await this.lotJobsService.addJob('setEndLotTimeJob', lot, { delay });
+      // tslint:disable-next-line:max-line-length
+      this.loggerService.log(`Job. Lot Create Event. Set job to lot endTime handling. Lot id: ${lot.id}. Job start/endTime - ${moment(lot.startTime).toISOString()}/${moment(lot.endTime).toISOString()}. Delay time: ${delay / 1000} seconds.`);
+    } catch (e) {
+      throw new BadRequestException('Error occurred during setting lot to auction!');
+    }
+
     return await this.lotsRepository.save(lot);
   }
 
@@ -91,13 +103,7 @@ export class LotsService {
   async create(lotRequest: CreateLotDto, user: User ) {
     try {
       const newLot = await this.lotsRepository.save(this.handleLot(new Lot(), lotRequest, user));
-
-      const delay: number = moment(newLot.endTime).valueOf() - moment().valueOf();
       this.loggerService.log(`Lot Created. Lot: id ${newLot.id} '${newLot.title}'. User '${user.firstName}', id: ${user.id}.`);
-      await this.lotJobsService.addJob('setEndLotTimeJob', newLot, { delay });
-
-      // tslint:disable-next-line:max-line-length
-      this.loggerService.log(`Job. Lot Create Event. Set job to lot endTime handling. Lot id: ${newLot.id}. Job start/endTime - ${moment(newLot.startTime).toISOString()}/${moment(newLot.endTime).toISOString()}. Delay time: ${delay / 1000} seconds.`);
       return newLot;
     } catch ( errors ) {
       this.loggerService.error(errors);

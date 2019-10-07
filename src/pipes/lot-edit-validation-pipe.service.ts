@@ -10,15 +10,13 @@ export class LotEditValidationPipe implements PipeTransform<any> {
     if (estimatedPrice <= currentPrice) {
       throw new BadRequestException('Estimated price should be less or equal then current.');
     }
-
-    const startTimeDate = moment();
     const endTimeDate = moment(endTime);
 
-    if (!startTimeDate.isValid() || !endTimeDate.isValid() ) {
-      throw new BadRequestException('Lot start or end time is not valid.');
+    if (!endTimeDate.isValid()) {
+      throw new BadRequestException('End time is not valid.');
     }
 
-    if (!endTimeDate.isAfter(startTimeDate.toISOString())) {
+    if (!endTimeDate.isAfter(moment().toISOString())) {
       throw new BadRequestException('End of lot\'s bidding should not be later it start.');
     }
 
