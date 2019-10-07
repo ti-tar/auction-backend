@@ -7,6 +7,9 @@ export class LotEditValidationPipe implements PipeTransform<any> {
 
     const { currentPrice, estimatedPrice, endTime } = value;
 
+    if (currentPrice < 0) {
+      throw new BadRequestException('Current price should be greater than zero.');
+    }
     if (estimatedPrice <= currentPrice) {
       throw new BadRequestException('Estimated price should be less or equal then current.');
     }
