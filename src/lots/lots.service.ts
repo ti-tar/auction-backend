@@ -22,7 +22,7 @@ export class LotsService {
   }
 
   async findAllByUserId(id: number): Promise<Lot[]> {
-    return this.lotsRepository.find({ where: { user: { id }}, relations: ['user'] });
+    return this.lotsRepository.find({ where: { user: { id }}, relations: ['user', 'bids'] });
   }
 
   async find(id: number): Promise<Lot> {
@@ -39,7 +39,27 @@ export class LotsService {
   }
 
   async delete(lotId: number) {
+    const lot = await this.lotsRepository.findOne(lotId);
+    if (lot.status !== 'pending') {
+      throw new BadRequestException(`Only lot with status 'pending' might be updated or deleted.`);
+    }
     return this.lotsRepository.delete(lotId);
+  }
+
+  async setLotToAuction(lotId: number, user: any): Promise<Lot> {
+    const lot = await this.lotsRepository.findOne({ where: { id: lotId }, relations: ['user'] });
+    if (!lot) {
+      throw new BadRequestException('There\'s no such lot in database.');
+    }
+    if (user.id !== lot.user.id) {
+      throw new BadRequestException('You can update only your own lots.');
+    }
+    if (lot.status !== 'pending') {
+      throw new BadRequestException('Only lot with status pending might be set to isProcessed status.');
+    }
+
+    lot.status = 'inProcess';
+    return await this.lotsRepository.save(lot);
   }
 
   async update(lotId: number, lotRequest: CreateLotDto, user): Promise<Lot> {
@@ -51,7 +71,11 @@ export class LotsService {
     }
 
     if (user.id !== lot.user.id) {
-      throw new BadRequestException('You can not update lot you didn\'t create.');
+      throw new BadRequestException('You can update only your own lots.');
+    }
+
+    if (lot.status !== 'pending') {
+      throw new BadRequestException(`Only lot with status 'pending' might be updated or deleted.`);
     }
 
     try {
@@ -67,9 +91,11 @@ export class LotsService {
   async create(lotRequest: CreateLotDto, user: User ) {
     try {
       const newLot = await this.lotsRepository.save(this.handleLot(new Lot(), lotRequest, user));
+
       const delay: number = moment(newLot.endTime).valueOf() - moment().valueOf();
       this.loggerService.log(`Lot Created. Lot: id ${newLot.id} '${newLot.title}'. User '${user.firstName}', id: ${user.id}.`);
       await this.lotJobsService.addJob('setEndLotTimeJob', newLot, { delay });
+
       // tslint:disable-next-line:max-line-length
       this.loggerService.log(`Job. Lot Create Event. Set job to lot endTime handling. Lot id: ${newLot.id}. Job start/endTime - ${moment(newLot.startTime).toISOString()}/${moment(newLot.endTime).toISOString()}. Delay time: ${delay / 1000} seconds.`);
       return newLot;

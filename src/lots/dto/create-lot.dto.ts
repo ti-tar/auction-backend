@@ -1,28 +1,27 @@
-import { IsString, IsNumber, IsDateString, IsEnum } from 'class-validator';
-// import { Status } from '../entities/lot';
+import { IsString, IsNumber, IsDateString, IsNotEmpty } from 'class-validator';
 
 export class CreateLotDto {
   @IsString()
+  @IsNotEmpty()
   readonly title: string;
 
   @IsString()
+  @IsNotEmpty()
   readonly image?: string;
 
   @IsString()
+  @IsNotEmpty()
   readonly description?: string;
 
-  // @IsEnum(Status)
-  // readonly status: string;
-
   @IsNumber()
+  @IsNotEmpty()
   readonly currentPrice: number;
 
   @IsNumber()
+  @IsNotEmpty()
   readonly estimatedPrice: number;
 
   @IsDateString()
-  readonly startTime: string;
-
-  @IsDateString()
+  @IsNotEmpty()
   readonly endTime: string;
 }

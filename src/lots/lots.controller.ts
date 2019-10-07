@@ -71,6 +71,13 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Put(':lotId/set')
+  async setLot(@Param('lotId', new ParseIntPipe()) lotId: number, @UserDecorator() user): Promise<{message}> {
+    const lot = await this.lotsService.setLotToAuction(lotId, user);
+    return { message: `Lot '${lot.title}' set to auction` };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':lotId')
   async delete(@Param('lotId') lotId: number): Promise<DeleteResult> {
     return this.lotsService.delete(lotId);
