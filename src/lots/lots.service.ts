@@ -29,6 +29,14 @@ export class LotsService {
     return this.lotsRepository.findOne({ where: {id}, relations: ['user', 'bids'] });
   }
 
+  async findOne(queryObj): Promise<Lot> {
+    return this.lotsRepository.findOne(queryObj);
+  }
+
+  async save(entity): Promise<Lot> {
+    return this.lotsRepository.save(entity);
+  }
+
   async findLotsByBidUserId(userId: number): Promise<Lot[]> {
     return await this.lotsRepository.createQueryBuilder('lots')
       .leftJoinAndSelect('lots.user', 'user')

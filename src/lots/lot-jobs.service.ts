@@ -1,6 +1,7 @@
 import { Queue, OnQueueEvent, BullQueueEvents, OnQueueActive, InjectQueue, QueueProcess } from 'nest-bull';
 import { Job, JobOptions, Queue as QueueType } from 'bull';
 import { LoggerService } from '../shared/logger.service';
+import { LotsService } from './lots.service';
 
 export const lotQueueName = 'lot-jobs';
 
@@ -18,7 +19,12 @@ export class LotJobsService {
   }
 
   @QueueProcess({ name: 'setEndLotTimeJob' })
-  processLotsCreated(job: Job<number>) {
+  async processLotsCreated(job) {
+    // const lot = await this.lotsService.findOne({ where: {id : job.data.id}, relations: ['user', 'bids'] });
+    // if (lot.status === 'inProcess') {
+    //   lot.status = 'closed';
+    //   await this.lotsService.save(lot);
+    // }
     return this.loggerService.log(`--- Job ${job.name} processed`);
   }
 

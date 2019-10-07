@@ -37,8 +37,10 @@ const configRedis: Redis.RedisOptions = {
     }),
   ],
   providers: [
-    LotsService, UsersService, BidsService, LoggerService, ConfigService,
-    LotsGateway, OrdersService, LotJobsService,
+    LotsService, UsersService, BidsService,
+    LoggerService, ConfigService,
+    LotsGateway, OrdersService,
+    LotJobsService,
   ],
   controllers: [LotsController],
 })
