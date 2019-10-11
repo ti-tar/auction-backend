@@ -1,13 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
 import { Repository } from 'typeorm';
 import { Lot } from '../entities/lot';
-// DTO's
 import { CreateLotDto } from './dto/create-lot.dto';
 import { User } from '../entities/user';
 import { LoggerService } from '../shared/logger.service';
 import { LotJobsService } from './lot-jobs.service';
+import { Pagination } from '../shared/pagination';
+import { ConfigService } from '../shared/config.service';
 
 @Injectable()
 export class LotsService {
@@ -15,14 +16,41 @@ export class LotsService {
     @InjectRepository(Lot) private lotsRepository: Repository<Lot>,
     private readonly lotJobsService: LotJobsService,
     private readonly loggerService: LoggerService,
+    private readonly configService: ConfigService,
   ) {}
 
-  async findLotsInProcess(): Promise<Lot[]> {
-    return this.lotsRepository.find({ where: { status: 'inProcess' }, relations: ['user', 'bids'] });
+  async findAndCountLotsInProcess(paginateOptions): Promise<Pagination<Lot>> {
+    const [data, total] = await this.lotsRepository.findAndCount({
+      where: { status: 'inProcess' },
+      relations: ['user', 'bids'],
+      take: this.configService.pagination.perPage,
+      skip: this.configService.pagination.perPage * (paginateOptions.page - 1),
+    });
+
+    return new Pagination<Lot>({data, total});
   }
 
-  async findAllByUserId(id: number): Promise<Lot[]> {
-    return this.lotsRepository.find({ where: { user: { id }}, relations: ['user', 'bids'] });
+  async findAndCountLotsByUserId(id: number, paginateOptions): Promise<Pagination<Lot>> {
+    const [data, total] = await this.lotsRepository.findAndCount({
+      where: { user: { id } },
+      relations: ['user', 'bids'],
+      take: this.configService.pagination.perPage,
+      skip: this.configService.pagination.perPage * (paginateOptions.page - 1),
+    });
+
+    return new Pagination<Lot>({data, total});
+  }
+
+  async findAndCountLotsByBidUserId(userId: number, paginateOptions): Promise<Pagination<Lot>> {
+    const [data, total] = await this.lotsRepository.createQueryBuilder('lots')
+      .leftJoinAndSelect('lots.user', 'user')
+      .leftJoinAndSelect('lots.bids', 'bids')
+      .leftJoinAndSelect('bids.user', 'bidsuser')
+      .where('bidsuser.id = :id', { id: userId })
+      .take(this.configService.pagination.perPage)
+      .skip(this.configService.pagination.perPage * (paginateOptions.page - 1))
+      .getManyAndCount();
+    return new Pagination<Lot>({data, total});
   }
 
   async find(id: number): Promise<Lot> {
@@ -35,15 +63,6 @@ export class LotsService {
 
   async save(entity): Promise<Lot> {
     return this.lotsRepository.save(entity);
-  }
-
-  async findLotsByBidUserId(userId: number): Promise<Lot[]> {
-    return await this.lotsRepository.createQueryBuilder('lots')
-      .leftJoinAndSelect('lots.user', 'user')
-      .leftJoinAndSelect('lots.bids', 'bids')
-      .leftJoinAndSelect('bids.user', 'bidsuser')
-      .where('bidsuser.id = :id', { id: userId })
-      .getMany();
   }
 
   async delete(lotId: number) {

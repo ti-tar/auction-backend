@@ -1,28 +1,29 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ConfigService } from '../../shared/config.service';
 
 export interface LotsResponse<T> {
   resources?: T;
-  resource?: T;
 }
 
 @Injectable()
 export class LotsSerializerInterceptor<T> implements NestInterceptor<T, LotsResponse<T>> {
+  constructor(
+    private configService: ConfigService,
+  ) {}
   intercept( context: ExecutionContext, next: CallHandler<T>): Observable<LotsResponse<T>> {
-    return next.handle().pipe(
-      map(items => {
-        if (Array.isArray(items)) {
-          return {
-            resources: items,
-            meta: {},
-          };
-        }
-        return {
-            resource: items,
-            meta: {},
-          };
+    const { query } = context.switchToHttp().getRequest();
+    // todo
+    // @ts-ignore
+    return next.handle().pipe(map(({ data, total }) => ({
+      resources: data,
+      meta: {
+          page: query.page || this.configService.pagination.page,
+          perPage: this.configService.pagination.perPage,
+          total,
         },
+      }),
       ),
     );
   }

@@ -25,6 +25,13 @@ export class ConfigService {
     return process.env[key];
   }
 
+  get pagination() {
+    return {
+      perPage: parseInt(this.get('PAGINATION_PER_PAGE'), 10),
+      page: 1,
+    };
+  }
+
   public static generateRandomToken(): string {
     return crypto.randomBytes(32).toString('hex');
   }

@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Put, Post, Body, UsePipes, Param, Delete,
+  Controller, Get, Put, Post, Body, Param, Delete, Request,
   UseInterceptors, UploadedFile, UseGuards, BadRequestException, ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -19,9 +19,12 @@ import { extname } from 'path';
 import { AuthGuard } from '@nestjs/passport';
 import { LoggerService } from '../shared/logger.service';
 import { LotsSerializerInterceptor } from './serializers/lots.interceptor';
+import { LotSerializerInterceptor } from './serializers/lot.interceptor';
 import { BidsSerializerInterceptor } from '../bids/serializers/bids.interceptor';
 import { UserDecorator, UserDecoratorInterface } from '../users/user.decorator';
 import { LotEditValidationPipe } from '../pipes/lot-edit-validation-pipe.service';
+import { ConfigService } from '../shared/config.service';
+import { Pagination } from '../shared/pagination';
 
 @Controller('lots')
 export class LotsController {
@@ -29,31 +32,53 @@ export class LotsController {
     private readonly lotsService: LotsService,
     private readonly bidService: BidsService,
     private readonly loggerService: LoggerService,
+    private readonly configService: ConfigService,
   ) {}
 
+  /*
+  * lots index page
+  * get lots: status in InProcess, paginating params in @Request() request
+  * response serialisation in LotsSerializerInterceptor
+  * */
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
   @Get()
-  async findLotsInProcess(): Promise<Lot[]> {
-    return this.lotsService.findLotsInProcess();
+  async getAllLots(@Request() request): Promise<Pagination<Lot>> {
+    return this.lotsService.findAndCountLotsInProcess({
+      page: request.query.page || this.configService.pagination.page,
+    });
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(LotsSerializerInterceptor)
-  @Get('own/bids')
-  async findLotsWithOwnBids(@UserDecorator() user: UserDecoratorInterface): Promise<Lot[]> {
-    return this.lotsService.findLotsByBidUserId(user.id);
-  }
-
+  /*
+  * auth user own lots page
+  * get lots: lot.user.id == jwt.user.id, paginating params in @Request() request
+  * response serialisation in LotsSerializerInterceptor
+  * */
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
   @Get('own/lots')
-  async findOwnLots(@UserDecorator() user: User): Promise<Lot[]> {
-    return this.lotsService.findAllByUserId(user.id);
+  async findAndCountLotsByUserId(@UserDecorator() user: User, @Request() request): Promise<Pagination<Lot>> {
+    return this.lotsService.findAndCountLotsByUserId(user.id, {
+      page: request.query.page || this.configService.pagination.page,
+    });
+  }
+
+  /*
+  * user bidded lots page
+  * get lots: lot.bids.user.id == jwt.user.id, paginating params in @Request() request
+  * response serialisation in LotsSerializerInterceptor
+  * */
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotsSerializerInterceptor)
+  @Get('own/bids')
+  async findLotsWithOwnBids(@UserDecorator() user: UserDecoratorInterface, @Request() request): Promise<Pagination<Lot>> {
+    return this.lotsService.findAndCountLotsByBidUserId(user.id, {
+      page: request.query.page || this.configService.pagination.page,
+    });
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(LotsSerializerInterceptor)
+  @UseInterceptors(LotSerializerInterceptor)
   @Get(':lotId')
   async find(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<Lot> {
     return this.lotsService.find(lotId);
@@ -71,20 +96,33 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Put(':lotId/set')
-  async setLot(@Param('lotId', new ParseIntPipe()) lotId: number, @UserDecorator() user): Promise<{message}> {
-    const lot = await this.lotsService.setLotToAuction(lotId, user);
-    return { message: `Lot '${lot.title}' set to auction` };
-  }
-
-  @UseGuards(AuthGuard('jwt'))
   @Delete(':lotId')
   async delete(@Param('lotId') lotId: number): Promise<DeleteResult> {
     return this.lotsService.delete(lotId);
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(LotsSerializerInterceptor)
+  @UseInterceptors(LotSerializerInterceptor)
+  @Post()
+  async create(
+    @Body(new ValidationPipe(), new LotEditValidationPipe()) lotData: CreateLotDto,
+    @UserDecorator() user: User,
+  ): Promise<Lot> {
+    return this.lotsService.create(lotData, user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Put(':lotId/set')
+  async setLot(@Param('lotId', new ParseIntPipe()) lotId: number, @UserDecorator() user): Promise<{message}> {
+
+    // check validation here - endtime time might been expired
+
+    const lot = await this.lotsService.setLotToAuction(lotId, user);
+    return { message: `Lot '${lot.title}' set to auction` };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotSerializerInterceptor)
   @Put(':lotId')
   async update(
     @Param('lotId') lotId: number,
@@ -92,16 +130,6 @@ export class LotsController {
     @UserDecorator() user,
   ): Promise<Lot> {
     return this.lotsService.update(lotId, lotData, user);
-  }
-
-  @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(LotsSerializerInterceptor)
-  @Post()
-  async create(
-    @Body(new ValidationPipe(), new LotEditValidationPipe()) lotData: CreateLotDto,
-    @UserDecorator() user: User,
-  ): Promise<Lot> {
-    return this.lotsService.create(lotData, user);
   }
 
   @UseGuards(AuthGuard('jwt'))
