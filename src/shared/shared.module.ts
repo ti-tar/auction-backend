@@ -1,5 +1,4 @@
 import { Module, Global, HttpModule } from '@nestjs/common';
-
 import { ConfigService } from './config.service';
 import { JwtModule } from '@nestjs/jwt';
 import { SECRET } from '../config';
@@ -17,7 +16,7 @@ import { SECRET } from '../config';
       }),
     ],
     exports: [
-      ConfigService, HttpModule,
+      ConfigService, HttpModule, JwtModule,
     ],
 })
 export class SharedModule {}

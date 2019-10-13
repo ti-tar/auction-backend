@@ -18,6 +18,7 @@ import { OrdersService } from '../orders/orders.service';
 import { Order } from '../entities/order';
 import { BullModule } from 'nest-bull';
 import { LotJobsService, lotQueueName } from './lot-jobs.service';
+import { ImagesService } from '../images/images.service';
 
 const configRedis: Redis.RedisOptions = {
   host: 'localhost',
@@ -28,7 +29,7 @@ const configRedis: Redis.RedisOptions = {
   imports: [
     TypeOrmModule.forFeature([Lot, User, Bid, Order]),
     PassportModule,
-    JwtModule.register({ secretOrPrivateKey: SECRET }),
+    JwtModule.register({ privateKey: SECRET }),
     BullModule.register({
       name: lotQueueName,
       options: {
@@ -40,7 +41,7 @@ const configRedis: Redis.RedisOptions = {
     LotsService, UsersService, BidsService,
     LoggerService, ConfigService,
     LotsGateway, OrdersService,
-    LotJobsService,
+    LotJobsService, ImagesService,
   ],
   controllers: [LotsController],
 })

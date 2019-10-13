@@ -1,30 +1,21 @@
 import {
-  CallHandler, ExecutionContext, Injectable, NestInterceptor
+  CallHandler, ExecutionContext, Injectable, NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export interface LotsResponse<T> {
-  resources?: T;
-  resource?: T;
+export interface BidsResponse<B, C> {
+  resources: B;
+  meta: { total: C };
 }
 
 @Injectable()
-export class BidsSerializerInterceptor<T> implements NestInterceptor<T, LotsResponse<T>> {
-  intercept( context: ExecutionContext, next: CallHandler<T>): Observable<LotsResponse<T>> {
-    return next.handle().pipe(
-      map(items => {
-          if (Array.isArray(items)) {
-            return {
-              resources: items,
-              meta: {},
-            };
-          }
-          return {
-            resource: items,
-            meta: {},
-          };
-        },
+export class BidsSerializerInterceptor<B, C> implements NestInterceptor<[B, C], BidsResponse<B, C>> {
+  intercept( context: ExecutionContext, next: CallHandler<[B, C]>): Observable<BidsResponse<B, C>> {
+    return next.handle().pipe(map(([bids, count]) => ({
+        resources: bids,
+        meta: { total: count },
+      }),
       ),
     );
   }

@@ -3,22 +3,20 @@ import { createTransport, SentMessageInfo } from 'nodemailer';
 import { ConfigService } from '../shared/config.service';
 import { LoggerService } from '../shared/logger.service';
 import { User } from '../entities/user';
-
-interface MailObject {
-  from: string;
-  to: string;
-  subject: string;
-  text?: string;
-  html?: string;
-}
+// import * as Mail from 'nodemailer/lib/mailer';
+import * as SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 @Injectable()
 export class EmailService {
 
+  transport: any;
+
   constructor(
     private readonly configService: ConfigService,
     private readonly loggerService: LoggerService,
-  ) {}
+  ) {
+    this.transport = createTransport(this.configService.getEmailOptions());
+  }
 
   async sendVerificationEmail(user: User): Promise<SentMessageInfo> {
     const verifyLink = this.configService.getVerifyLink(user.token);
@@ -53,21 +51,9 @@ export class EmailService {
     });
   }
 
-  private async sendEmail(emailObject: MailObject): Promise<SentMessageInfo> {
-
-    const transportOptions = {
-      host: this.configService.get('MAILTRIP_HOST'),
-      port: parseInt(this.configService.get('MAILTRIP_PORT'), 10),
-      auth: {
-        user: this.configService.get('MAILTRIP_USER'),
-        pass: this.configService.get('MAILTRIP_PASS'),
-      },
-    };
-
-    const transport = createTransport(transportOptions);
-
+  async sendEmail(emailObject: SMTPTransport.Options): Promise<SentMessageInfo> {
     try {
-      return await transport.sendMail(emailObject);
+      return await this.transport.sendMail(emailObject);
     } catch (error) {
       this.loggerService.error(error);
       throw new NotImplementedException('Email not sent.');

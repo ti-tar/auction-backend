@@ -1,6 +1,6 @@
 import {
   Controller, Get, Put, Post, Body, Param, Delete, Request,
-  UseInterceptors, UploadedFile, UseGuards, BadRequestException, ParseIntPipe,
+  UseInterceptors, UploadedFile, UseGuards, ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
@@ -21,10 +21,12 @@ import { LoggerService } from '../shared/logger.service';
 import { LotsSerializerInterceptor } from './serializers/lots.interceptor';
 import { LotSerializerInterceptor } from './serializers/lot.interceptor';
 import { BidsSerializerInterceptor } from '../bids/serializers/bids.interceptor';
+import { ImageUploadSerializerInterceptor } from '../images/serializers/image-upload.interceptor';
 import { UserDecorator, UserDecoratorInterface } from '../users/user.decorator';
 import { LotEditValidationPipe } from '../pipes/lot-edit-validation-pipe.service';
 import { ConfigService } from '../shared/config.service';
 import { Pagination } from '../shared/pagination';
+import { ImagesService } from '../images/images.service';
 
 @Controller('lots')
 export class LotsController {
@@ -33,6 +35,7 @@ export class LotsController {
     private readonly bidService: BidsService,
     private readonly loggerService: LoggerService,
     private readonly configService: ConfigService,
+    private readonly imagesService: ImagesService,
   ) {}
 
   /*
@@ -57,7 +60,7 @@ export class LotsController {
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
   @Get('own/lots')
-  async findAndCountLotsByUserId(@UserDecorator() user: User, @Request() request): Promise<Pagination<Lot>> {
+  async getAllLotsByUserId(@UserDecorator() user: User, @Request() request): Promise<Pagination<Lot>> {
     return this.lotsService.findAndCountLotsByUserId(user.id, {
       page: request.query.page || this.configService.pagination.page,
     });
@@ -71,7 +74,7 @@ export class LotsController {
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
   @Get('own/bids')
-  async findLotsWithOwnBids(@UserDecorator() user: UserDecoratorInterface, @Request() request): Promise<Pagination<Lot>> {
+  async getAllLotsByBidUserId(@UserDecorator() user: UserDecoratorInterface, @Request() request): Promise<Pagination<Lot>> {
     return this.lotsService.findAndCountLotsByBidUserId(user.id, {
       page: request.query.page || this.configService.pagination.page,
     });
@@ -80,19 +83,15 @@ export class LotsController {
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotSerializerInterceptor)
   @Get(':lotId')
-  async find(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<Lot> {
+  async getLotById(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<Lot> {
     return this.lotsService.find(lotId);
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(BidsSerializerInterceptor)
   @Get(':lotId/bids')
-  async findBidsById(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<any> {
-    return {
-      resources: await this.bidService.findAllByLotId(lotId),
-      meta: {
-        total: await this.bidService.getBidsCountByLotId(lotId),
-      },
-    };
+  async getBidsByLotId(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<[Bid[], number]> {
+    return await this.bidService.findAllBidsByLotId(lotId);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -113,12 +112,8 @@ export class LotsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Put(':lotId/set')
-  async setLot(@Param('lotId', new ParseIntPipe()) lotId: number, @UserDecorator() user): Promise<{message}> {
-
-    // check validation here - endtime time might been expired
-
-    const lot = await this.lotsService.setLotToAuction(lotId, user);
-    return { message: `Lot '${lot.title}' set to auction` };
+  async setLot(@Param('lotId', new ParseIntPipe()) lotId: number, @UserDecorator() user): Promise<Lot> {
+    return await this.lotsService.setLotToAuction(lotId, user);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -145,6 +140,7 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(ImageUploadSerializerInterceptor)
   @Post('upload')
   @UseInterceptors(
     FileInterceptor(
@@ -159,15 +155,7 @@ export class LotsController {
       },
     ),
   )
-  async uploadFile(@UploadedFile() file, @UserDecorator() user: User): Promise<{ fileName: string }> {
-    const fullPath: string = `upload/images/lots/thumb/${file.filename}`;
-    try {
-      const {width, height, size}: sharp.OutputInfo = await sharp(file.path).resize(200).toFile(fullPath);
-      this.loggerService.log(`Upload File. User: id ${user.id}, ${user.firstName}. File '${file.filename}' thumbed to${width}x${height} ${size}b!`);
-    } catch (error) {
-      this.loggerService.error(error);
-      throw new BadRequestException('Error during saving image.');
-    }
-    return { fileName: file.filename };
+  async uploadFile(@UploadedFile() file, @UserDecorator() user: User): Promise<sharp.OutputInfo  & { filename: string }> {
+    return this.imagesService.resize(file, user);
   }
 }

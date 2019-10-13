@@ -1,5 +1,5 @@
-import { BadRequestException, Body, Injectable, Req } from '@nestjs/common';
-import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
@@ -16,8 +16,8 @@ export class BidsService {
     private readonly ordersService: OrdersService,
   ) {}
 
-  async findAllByLotId(lotId: number): Promise<Bid[]> {
-    return await this.bidsRepository.find({
+  async findAllBidsByLotId(lotId: number): Promise<[Bid[], number]> {
+    return await this.bidsRepository.findAndCount({
       where: {lot: { id: lotId }},
       relations: ['user'],
     });

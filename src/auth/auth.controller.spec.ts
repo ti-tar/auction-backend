@@ -26,9 +26,9 @@ describe('Auth Controller', () => {
         {
           provide: AuthService,
           useFactory: () => ({
-            loginUser: jest.fn((loginDto) => getMockedUserByField('email', loginDto.email)),
+            loginUser: jest.fn((loginDto) => getMockedUserByField({ email: loginDto.email})),
             singUp: jest.fn((createUser) => createUser),
-            verifyEmail: jest.fn((token) => getMockedUserByField('token', token)),
+            verifyEmail: jest.fn((token) => getMockedUserByField({ token })),
             forgotPassword: jest.fn(() => ''),
             resetPassword: jest.fn(() => ''),
           }),
@@ -40,7 +40,7 @@ describe('Auth Controller', () => {
         {
           provide: UsersService,
           useFactory: () => ({
-            findOneById: jest.fn((id) => getMockedUserByField('id', id)),
+            findOneById: jest.fn((id) => getMockedUserByField({id})),
           }),
         },
         ConfigService, EmailService,
@@ -60,7 +60,7 @@ describe('Auth Controller', () => {
   });
 
   it('login. method returns user', async () => {
-    const user = getMockedUserByField('id', 1);
+    const user = getMockedUserByField({ id: 1 });
     expect(await authController.login({
       email: user.email,
       password: '',
@@ -79,7 +79,7 @@ describe('Auth Controller', () => {
   });
 
   it('verifyEmail', async () => {
-    const user = getMockedUserByField('id', 1);
+    const user = getMockedUserByField({ id: 1 });
     expect(await authController.verifyEmail({token: user.token }))
       .toEqual(expect.objectContaining({
         jwtToken: expect.any(String),
@@ -102,7 +102,7 @@ describe('Auth Controller', () => {
   });
 
   it('profile', async () => {
-    const user = getMockedUserByField('id', 1);
+    const user = getMockedUserByField({ id: 1 });
     expect(await authController.profile(user))
       .toStrictEqual(user);
   });

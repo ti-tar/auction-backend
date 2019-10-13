@@ -1,8 +1,6 @@
-interface PaginationResultInterface<PaginationEntity> {
+export interface PaginationResultInterface<PaginationEntity> {
   data: PaginationEntity[];
   total: number;
-  next?: string;
-  previous?: string;
 }
 
 export class Pagination<PaginationEntity> {

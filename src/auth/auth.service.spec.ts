@@ -34,7 +34,7 @@ describe('AuthService', () => {
           provide: UsersService,
           useFactory: () => ({
             findByEmail: jest.fn((email: string) => mockedUsersFromDB.find(user => user.email === email)),
-            findByToken: jest.fn((token: string) => getMockedUserByField('token', token)),
+            findByToken: jest.fn((token: string) => getMockedUserByField({ token })),
             update: jest.fn(user => user),
             save: jest.fn(user => user),
           }),
@@ -64,7 +64,7 @@ describe('AuthService', () => {
   });
 
   it('loginUser. Success login', async () => {
-    const loginUser = getMockedUserByField('status', 'approved');
+    const loginUser = getMockedUserByField({ status: 'approved'});
     expect(await authService.loginUser({ email: loginUser.email, password: '' }))
       .toEqual(expect.objectContaining({ email: loginUser.email }));
   });
@@ -75,7 +75,7 @@ describe('AuthService', () => {
   });
 
   it('loginUser. User not approved', async () => {
-    const loginUser = getMockedUserByField( 'status', 'pending');
+    const loginUser = getMockedUserByField({ status: 'pending'});
     await expect(authService.loginUser({ email: loginUser.email, password: '' }))
       .rejects.toThrowError(BadRequestException);
     expect(userService.findByEmail).toHaveBeenCalledWith(loginUser.email);
@@ -94,7 +94,7 @@ describe('AuthService', () => {
   });
 
   it('verifyEmail. Success email verifying.', async () => {
-    const notVerifiedUser = getMockedUserByField('status', 'pending');
+    const notVerifiedUser = getMockedUserByField({status: 'pending'});
     const verifiedUser = await authService.verifyEmail(notVerifiedUser.token);
     expect(verifiedUser)
       .toEqual(expect.objectContaining({
@@ -111,7 +111,7 @@ describe('AuthService', () => {
   });
 
   it('forgotPassword. Success implementing', async () => {
-    const pendingStatusUser = getMockedUserByField('status', 'approved');
+    const pendingStatusUser = getMockedUserByField({ status: 'approved'});
     expect(await authService.forgotPassword({ email: pendingStatusUser.email }))
       .toEqual(expect.objectContaining({
         email: pendingStatusUser.email,
@@ -125,13 +125,13 @@ describe('AuthService', () => {
   });
 
   it('forgotPassword. Haven\'t been approved user.', async () => {
-    const pendingStatusUser = getMockedUserByField('status', 'pending');
+    const pendingStatusUser = getMockedUserByField({ status: 'pending' });
     await expect(authService.forgotPassword({ email: pendingStatusUser.email }))
       .rejects.toThrowError('You haven\'t been approved.');
   });
 
   it('resetPassword. Success implementing', async () => {
-    const approvedUser = getMockedUserByField('status', 'approved');
+    const approvedUser = getMockedUserByField({ status: 'approved'});
     expect(await authService.resetPassword({ password: '1', passwordConfirm: '1', token: approvedUser.token }))
       .toEqual(expect.objectContaining({password: ConfigService.getPasswordsHash('1')}));
   });
@@ -142,7 +142,7 @@ describe('AuthService', () => {
   });
 
   it('resetPassword. Account was not been approved.', async () => {
-    const pendingStatusUser = getMockedUserByField('status', 'pending');
+    const pendingStatusUser = getMockedUserByField({ status: 'pending'});
     await expect(authService.resetPassword({ password: '1', passwordConfirm: '1', token: pendingStatusUser.token }))
       .rejects.toThrowError('Your account was not been approved.');
   });
@@ -155,12 +155,12 @@ describe('AuthService', () => {
   });
 
   it('validateUser. Success implementing', async () => {
-    const user = getMockedUserByField('status', 'approved');
+    const user = getMockedUserByField({status: 'approved'});
     expect(await authService.validateUser(user.email, '123')).toStrictEqual(user);
   });
 
   it('validateUser. Wrong email/password', async () => {
-    const user = getMockedUserByField('status', 'approved');
+    const user = getMockedUserByField({ status: 'approved' });
     expect(await authService.validateUser(user.email, 'invalid_password')).toBeNull();
   });
 

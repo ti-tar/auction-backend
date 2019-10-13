@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import * as crypto from 'crypto';
-import { createHmac } from 'crypto';
+import { randomBytes, createHmac } from 'crypto';
 import { SnakeNamingStrategy } from '../snake-naming.strategy';
 import { User } from '../entities/user';
 
@@ -25,6 +24,17 @@ export class ConfigService {
     return process.env[key];
   }
 
+  getEmailOptions() {
+    return {
+      host: this.get('MAILTRIP_HOST'),
+      port: parseInt(this.get('MAILTRIP_PORT'), 10),
+      auth: {
+        user: this.get('MAILTRIP_USER'),
+        pass: this.get('MAILTRIP_PASS'),
+      },
+    };
+  }
+
   get pagination() {
     return {
       perPage: parseInt(this.get('PAGINATION_PER_PAGE'), 10),
@@ -33,12 +43,18 @@ export class ConfigService {
   }
 
   public static generateRandomToken(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return randomBytes(32).toString('hex');
   }
 
   public static getPasswordsHash(password: string): string {
     return createHmac('sha256', password).digest('hex');
   }
+
+  public getLotCoverPath(filename: string): string {
+    return `upload/images/lots/thumb/${filename}`;
+  }
+
+  public lotCoverThumbWidth: 200;
 
   getVerifyLink(token: string): string {
     return `${this.get('FRONTEND_URL')}auth/verify/email?token=${encodeURIComponent(token)}`;

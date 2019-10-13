@@ -10,6 +10,7 @@ import { Server, Socket } from 'socket.io';
 import * as moment from 'moment';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../shared/logger.service';
+import { JwtService } from '@nestjs/jwt';
 
 interface WebsocketResponseInterface {
   message: string;
@@ -17,10 +18,11 @@ interface WebsocketResponseInterface {
 }
 
 @Injectable()
-@WebSocketGateway()
+@WebSocketGateway({namespace: 'lots' })
 export class LotsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly loggerService: LoggerService,
+    // private readonly jwtService: JwtService,
   ) {}
 
   @WebSocketServer()
@@ -30,14 +32,21 @@ export class LotsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
      this.loggerService.log('LotsGateway websocket has been initialized.');
   }
 
-  // ping-pong functionality
+  // ping-pong
   @SubscribeMessage('checkServerConnection')
   checkServerConnection(client: Socket): void {
-    const resp = 'Server time: ' + moment().format('DD MMM YYYY, hh:mm:ss');
+    const resp = 'Pong! Server time: ' + moment().format('DD MMM YYYY, hh:mm:ss');
     client.emit('checkBrowserConnection', {message: resp });
   }
 
-  handleConnection(client: any, ...args): any {
+  async handleConnection(client: Socket, ...args): Promise<any> {
+    // try {
+    //   await this.jwtService.verify(client.handshake.query.token);
+    // } catch (e) {
+    //   this.loggerService.error(e);
+    //   return ;
+    // }
+
     client.emit('connection');
     this.loggerService.log('LotsGateway handleConnection method.');
   }

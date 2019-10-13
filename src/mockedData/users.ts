@@ -1,5 +1,5 @@
-export const getMockedUserByField = (field: string, value: any) => {
-  const user = mockedUsersFromDB.find(u => u[field] === value);
+export const getMockedUserByField = (fieldOption) => {
+  const user = mockedUsersFromDB.find(u => u[Object.keys(fieldOption)[0]] === Object.values(fieldOption)[0]);
   return user ? {...user} : undefined;
 };
 
@@ -15,6 +15,7 @@ export const mockedUsersFromDB = [
     token: 'token_user_1',
     lots: null,
     bids: null,
+    beforeInsert: null,
   }, {
     id: 2,
     email: 'user2@gmail.com',
@@ -26,5 +27,6 @@ export const mockedUsersFromDB = [
     token: 'token_user_2',
     lots: null,
     bids: null,
+    beforeInsert: null,
   },
 ];

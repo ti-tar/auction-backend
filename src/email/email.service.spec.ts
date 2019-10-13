@@ -1,73 +1,62 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmailService } from './email.service';
 import { ConfigService } from '../shared/config.service';
-
-import * as nodeMailerMock from 'nodemailer-mock';
-
-import * as nodemailer from 'nodemailer';
-import { BadRequestException } from '@nestjs/common';
+import { LoggerService } from '../shared/logger.service';
+import MockedLoggerService from '../../test/services/mockedLogger.service';
+import { MockConfigService } from '../mockedData/mocked-config.service';
+import * as SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { getMockedUserByField } from '../mockedData/users';
 
 describe('EmailService', () => {
+  let testingModule: TestingModule;
   let emailService: EmailService;
+  let mockedUser;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    testingModule = await Test.createTestingModule({
       providers: [
         {
           provide: ConfigService,
-          useFactory: () => ({
-            get: jest.fn(() => ({})),
-            generateJWT: jest.fn(() => ({})),
-            typeOrmConfig: jest.fn(() => ({})),
-          }),
+          useClass: MockConfigService,
+        },
+        {
+          provide: LoggerService,
+          useClass: MockedLoggerService(),
         },
         EmailService,
       ],
     }).compile();
 
-    emailService = module.get<EmailService>(EmailService);
+    emailService = testingModule.get<EmailService>(EmailService);
+    mockedUser = getMockedUserByField({ id: 2 });
+  });
+
+  afterAll(async () => {
+    await testingModule.close();
   });
 
   it('should be defined', () => {
     expect(emailService).toBeDefined();
   });
 
-  it('should set configuration options', () => {
-    const transport = nodeMailerMock.createTransport({
-      someOptionKey: 'someOptionValue',
-    });
-
-    expect(transport.mock.options).toEqual({ someOptionKey: 'someOptionValue' });
+  it('sendVerificationEmail', async () => {
+    // @ts-ignore
+    emailService.sendEmail = (emailObject: SMTPTransport.Options) => emailObject;
+    const sentEmailInfo = await emailService.sendVerificationEmail(mockedUser);
+    expect(sentEmailInfo).toEqual(expect.objectContaining({ to: mockedUser.email }));
   });
 
-  // it('should store emails sent with nodemailer, so that they can be asserted against', async () => {
-  //
-  //   const transport = nodeMailerMock.createTransport({
-  //     key: 'value',
-  //   });
-  //
-  //   const email = {
-  //     from: 'sender@address',
-  //     to: 'receiver@address',
-  //     subject: 'hello',
-  //     text: 'hello world!',
-  //   };
-  // });
-  //
-  // it('should return an error and not send an email if there is no `to` in the mail data object', function () {
-  //   const transport = nodeMailerMock.createTransport({
-  //     foo: 'bar',
-  //   });
-  //
-  //   const transporter = nodemailer.createTransport(transport);
-  //
-  //   transporter.sendMail({
-  //     from: 'sender@address',
-  //     subject: 'hello',
-  //     text: 'hello world!',
-  //   });
-  //
-  //   transport.sentMail.length.should.equal(0);
-  // });
+  it('sendApprovalEmail', async () => {
+    // @ts-ignore
+    emailService.sendEmail = (emailObject: SMTPTransport.Options) => emailObject;
+    const sentEmailInfo = await emailService.sendApprovalEmail(mockedUser);
+    expect(sentEmailInfo).toEqual(expect.objectContaining({ to: mockedUser.email }));
+  });
+  it('sendForgotPasswordMail', async () => {
+    // @ts-ignore
+    emailService.sendEmail = (emailObject: SMTPTransport.Options) => emailObject;
+    const sentEmailInfo = await emailService.sendForgotPasswordMail(mockedUser);
+    expect(sentEmailInfo).toEqual(expect.objectContaining({ to: mockedUser.email }));
+  });
 
 });

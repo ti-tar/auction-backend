@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { Connection } from 'typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { EmailService } from './email/email.service';
 import { LoggerService } from './shared/logger.service';
 import { OrdersModule } from './orders/orders.module';
+import { ImagesModule } from './images/images.module';
 
 @Module({
   imports: [
@@ -23,6 +23,7 @@ import { OrdersModule } from './orders/orders.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => configService.typeOrmConfig,
     }),
+    ImagesModule,
   ],
   controllers: [AppController],
   providers: [
@@ -32,6 +33,4 @@ import { OrdersModule } from './orders/orders.module';
   ],
 })
 
-export class AppModule {
-  constructor(private readonly connection: Connection) {}
-}
+export class AppModule {}

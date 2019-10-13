@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Query } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
 import { Repository } from 'typeorm';
@@ -57,14 +57,6 @@ export class LotsService {
     return this.lotsRepository.findOne({ where: {id}, relations: ['user', 'bids'] });
   }
 
-  async findOne(queryObj): Promise<Lot> {
-    return this.lotsRepository.findOne(queryObj);
-  }
-
-  async save(entity): Promise<Lot> {
-    return this.lotsRepository.save(entity);
-  }
-
   async delete(lotId: number) {
     const lot = await this.lotsRepository.findOne(lotId);
     if (lot.status !== 'pending') {
@@ -87,13 +79,17 @@ export class LotsService {
     lot.startTime = moment().toDate();
     lot.status = 'inProcess';
 
+    if (!moment(lot.endTime).isAfter(lot.startTime.toISOString())) {
+      throw new BadRequestException('Update Lot\'s endtime. It should be grater than current time.');
+    }
+
     try {
       await this.lotsRepository.save(lot);
       const delay: number = moment(lot.endTime).valueOf() - moment().valueOf();
       this.loggerService.log(`Lot Created. Lot: id ${lot.id} '${lot.title}'. User '${user.firstName}', id: ${user.id}.`);
       await this.lotJobsService.addJob('setEndLotTimeJob', lot, { delay });
-      // tslint:disable-next-line:max-line-length
-      this.loggerService.log(`Job. Lot Create Event. Set job to lot endTime handling. Lot id: ${lot.id}. Job start/endTime - ${moment(lot.startTime).toISOString()}/${moment(lot.endTime).toISOString()}. Delay time: ${delay / 1000} seconds.`);
+      this.loggerService.log(`Job. Lot Create Event. Set job to lot endTime handling. Lot id: ${lot.id}. ` +
+        `Job start/endTime - ${moment(lot.startTime).toISOString()}/${moment(lot.endTime).toISOString()}. Delay time: ${delay / 1000} seconds.`);
     } catch (e) {
       throw new BadRequestException('Error occurred during setting lot to auction!');
     }

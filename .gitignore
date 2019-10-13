@@ -385,6 +385,8 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+.nyc_output/
+
 # Local
 dist
 package-lock.json
@@ -394,3 +396,4 @@ logs
 .env.*
 
 upload
+
