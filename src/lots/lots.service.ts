@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import { Lot } from '../entities/lot';
 import { CreateLotDto } from './dto/create-lot.dto';
 import { User } from '../entities/user';
@@ -50,14 +50,15 @@ export class LotsService {
       .take(this.configService.pagination.perPage)
       .skip(this.configService.pagination.perPage * (paginateOptions.page - 1))
       .getManyAndCount();
+
     return new Pagination<Lot>({data, total});
   }
 
-  async find(id: number): Promise<Lot> {
-    return this.lotsRepository.findOne({ where: {id}, relations: ['user', 'bids'] });
+  async findOne(id: number): Promise<Lot> {
+    return this.lotsRepository.findOne(id, { relations: ['user', 'bids'] });
   }
 
-  async delete(lotId: number) {
+  async delete(lotId: number): Promise<DeleteResult> {
     const lot = await this.lotsRepository.findOne(lotId);
     if (lot.status !== 'pending') {
       throw new BadRequestException(`Only lot with status 'pending' might be updated or deleted.`);
@@ -66,7 +67,7 @@ export class LotsService {
   }
 
   async setLotToAuction(lotId: number, user: any): Promise<Lot> {
-    const lot = await this.lotsRepository.findOne({ where: { id: lotId }, relations: ['user'] });
+    const lot = await this.findOne(lotId);
     if (!lot) {
       throw new BadRequestException('There\'s no such lot in database.');
     }
@@ -80,7 +81,7 @@ export class LotsService {
     lot.status = 'inProcess';
 
     if (!moment(lot.endTime).isAfter(lot.startTime.toISOString())) {
-      throw new BadRequestException('Update Lot\'s endtime. It should be grater than current time.');
+      throw new BadRequestException('Lot endtime should be grater than current time.');
     }
 
     try {
@@ -90,25 +91,22 @@ export class LotsService {
       await this.lotJobsService.addJob('setEndLotTimeJob', lot, { delay });
       this.loggerService.log(`Job. Lot Create Event. Set job to lot endTime handling. Lot id: ${lot.id}. ` +
         `Job start/endTime - ${moment(lot.startTime).toISOString()}/${moment(lot.endTime).toISOString()}. Delay time: ${delay / 1000} seconds.`);
+      return lot;
     } catch (e) {
       throw new BadRequestException('Error occurred during setting lot to auction!');
     }
-
-    return await this.lotsRepository.save(lot);
   }
 
   async update(lotId: number, lotRequest: CreateLotDto, user): Promise<Lot> {
 
-    const lot = await this.find(lotId);
+    const lot = await this.findOne(lotId);
 
     if (!lot) {
       throw new BadRequestException('Such lot doesn\'t exist.');
     }
-
     if (user.id !== lot.user.id) {
       throw new BadRequestException('You can update only your own lots.');
     }
-
     if (lot.status !== 'pending') {
       throw new BadRequestException(`Only lot with status 'pending' might be updated or deleted.`);
     }

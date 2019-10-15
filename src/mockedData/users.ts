@@ -1,6 +1,9 @@
-export const getMockedUserByField = (fieldOption) => {
-  const user = mockedUsersFromDB.find(u => u[Object.keys(fieldOption)[0]] === Object.values(fieldOption)[0]);
-  return user ? {...user} : undefined;
+export const getMockedUserByField = (fieldOptions) => {
+  let items = mockedUsersFromDB;
+  Object.keys(fieldOptions).forEach(k => {
+    items = items.filter(item => item[k] === fieldOptions[k]);
+  });
+  return items.length ? {...items[0]} : undefined;
 };
 
 export const mockedUsersFromDB = [

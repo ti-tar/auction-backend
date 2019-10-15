@@ -84,7 +84,7 @@ export class LotsController {
   @UseInterceptors(LotSerializerInterceptor)
   @Get(':lotId')
   async getLotById(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<Lot> {
-    return this.lotsService.find(lotId);
+    return this.lotsService.findOne(lotId);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -135,7 +135,7 @@ export class LotsController {
     @Body( new ValidationPipe() ) bidData: CreateBidDto,
     @UserDecorator() user: User,
   ): Promise<Bid> {
-    const lot = await this.lotsService.find(lotId);
+    const lot = await this.lotsService.findOne(lotId);
     return this.bidService.addBid(bidData, user, lot);
   }
 

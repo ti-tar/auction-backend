@@ -62,7 +62,7 @@ describe('Lots Controller', () => {
             findAndCountLotsInProcess: jest.fn(() => mockedLotsFromDB.filter(l => l.status === 'inProgress')),
             findAndCountLotsByUserId: jest.fn(() => [ mockedLot ]),
             findAndCountLotsByBidUserId: jest.fn(() => [ mockedLot ]),
-            find: jest.fn(() => true),
+            findOne: jest.fn(() => true),
             delete: jest.fn(() => true),
             update: jest.fn(() => mockedLot),
             create: jest.fn(() => mockedLot),
@@ -84,8 +84,8 @@ describe('Lots Controller', () => {
     imagesService = testingModule.get(ImagesService);
   });
 
-  afterAll(() => {
-    testingModule.close();
+  afterAll(async () => {
+    await testingModule.close();
   });
 
   beforeEach(() => {
@@ -122,7 +122,7 @@ describe('Lots Controller', () => {
   });
   it('getLotById', async () => {
     expect(await lotsController.getLotById(1)).toBe(true);
-    expect(lotsService.find).toHaveBeenCalledWith(1);
+    expect(lotsService.findOne).toHaveBeenCalledWith(1);
   });
 
   it('getBidsByLotId', async () => {
