@@ -57,7 +57,7 @@ export const mockedLotsFromDB = [
     estimatedPrice: 1614,
     startTime: '2019-10-05T11:56:27.968Z',
     endTime: '2019-10-15T00:07:09.320Z',
-    user: null,
+    user: getMockedUserByField({id: 3}),
     bids: [],
   },
   {

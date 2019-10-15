@@ -2,71 +2,83 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { User } from '../entities/user';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-
-declare type MockType<T> = {
-  [P in keyof T]: jest.Mock<{}>;
-};
-
-const mockedUsers = [
-  {
-    id: 1,
-    title: 'Lot 1',
-  },
-  {
-    id: 2,
-    title: 'Lot 2',
-  },
-  {
-    id: 3,
-    title: 'Lot 3',
-  },
-  {
-    id: 4,
-    title: 'Lot 4',
-  },
-];
+import { Repository, UpdateResult } from 'typeorm';
+import { getMockedLotByField } from '../mockedData/lots';
+import { getMockedUserByField, mockedUsersFromDB } from '../mockedData/users';
 
 describe('UsersService', () => {
-  let service: UsersService;
-  let repositoryMock: MockType<Repository<User>>;
+  let usersService: UsersService;
+  let usersRepository: Repository<User>;
+
+  let mockedLot;
+  let mockedUser;
+
+  let testingModule: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    testingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         {
           provide: getRepositoryToken(User),
           useFactory: jest.fn(() => ({
-            find: jest.fn(() => mockedUsers),
-            findOne: jest.fn(id => {
-              return mockedUsers.find(user => user.id === parseInt(id, 10));
-            }),
+            find: jest.fn(() => mockedUsersFromDB),
+            findOne: jest.fn(options => getMockedUserByField(options)),
+            update: jest.fn((id, entity) => entity),
+            save: jest.fn(entity => entity),
           })),
         },
       ],
     }).compile();
 
-    service = module.get<UsersService>(UsersService);
-    repositoryMock = module.get(getRepositoryToken(User));
+    usersService = testingModule.get<UsersService>(UsersService);
+    usersRepository = testingModule.get(getRepositoryToken(User));
+
+    mockedLot = getMockedLotByField({ id: 1 });
+    mockedUser = getMockedUserByField({id: 1 });
   });
 
-  it.todo('findAll');
+  afterEach(() => {
+    mockedLot = null;
+    mockedUser = null;
+  });
 
-  it.todo('findOne');
+  afterAll( async () => {
+    await testingModule.close();
+  });
+
+  it('findAll', async () => {
+    expect(await usersService.findAll()).toHaveLength(mockedUsersFromDB.length);
+    expect(usersRepository.find).toHaveBeenCalled();
+  });
+
+  it('findOne', async () => {
+    expect(await usersService.findOne(1)).toStrictEqual(getMockedUserByField({id: 1}));
+    expect(usersRepository.findOne).toHaveBeenCalled();
+  });
 
   it('findOneById', async () => {
-    const mockedUser = mockedUsers[0];
-
-    repositoryMock.findOne.mockReturnValue(mockedUser);
--
-    expect(await service.findOneById(1)).toEqual(mockedUser);
-    expect(repositoryMock.findOne).toHaveBeenCalledWith({"id": mockedUser.id});
+    expect(await usersService.findOneById(mockedUser.id)).toStrictEqual(mockedUser);
+    expect(usersRepository.findOne).toHaveBeenCalledWith(mockedUser.id);
   });
 
-  it.todo('create');
+  it('update', async () => {
+    expect(await usersService.update(mockedUser)).toStrictEqual(mockedUser);
+    expect(usersRepository.update).toHaveBeenCalledWith(mockedUser.id, mockedUser);
+  });
 
-  it.todo('delete');
+  it('save', async () => {
+    expect(await usersService.save(mockedUser)).toStrictEqual(mockedUser);
+    expect(usersRepository.save).toHaveBeenCalledWith(mockedUser);
+  });
 
-  it.todo('update');
+  it('findByEmail', async () => {
+    expect(await usersService.findByEmail(mockedUser.email)).toStrictEqual(mockedUser);
+    expect(usersRepository.findOne).toHaveBeenCalledWith({ email: mockedUser.email });
+  });
+
+  it('findByToken', async () => {
+    expect(await usersService.findByToken(mockedUser.token)).toStrictEqual(mockedUser);
+    expect(usersRepository.findOne).toHaveBeenCalledWith({ token: mockedUser.token });
+  });
 });

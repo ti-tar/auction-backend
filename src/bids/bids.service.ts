@@ -23,10 +23,6 @@ export class BidsService {
     });
   }
 
-  async getBidsCountByLotId(lotId: number): Promise<number> {
-    return await this.bidsRepository.createQueryBuilder('bids').where({lot: { id: lotId }}).getCount();
-  }
-
   async addBid(bidData: CreateBidDto, user: User, lot: Lot ) {
     if (!lot) {
       throw new BadRequestException('Lot info error');
