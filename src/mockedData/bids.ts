@@ -1,14 +1,6 @@
-import { isNumber } from 'util';
+import { findOneMockFromMocked } from './helpers';
 
-export const getMockedBidByField = <T>(fieldOptions: T) => {
-  let items = mockedBids;
-  const filters = isNumber(fieldOptions) ? { id: fieldOptions } : fieldOptions;
-
-  Object.keys(filters).forEach(k => {
-    items = items.filter(item => item[k] === filters[k]);
-  });
-  return items.length ? {...items[0]} : undefined;
-};
+export const getMockedBidByField = (fieldsToFind) => findOneMockFromMocked(fieldsToFind, mockedBids);
 
 export const mockedBids = [
   { id: 1,

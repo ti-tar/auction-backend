@@ -43,7 +43,6 @@ describe('BidsService', () => {
             create: jest.fn(() => ''),
           })),
         },
-
       ],
     }).compile();
 

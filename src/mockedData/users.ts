@@ -1,15 +1,6 @@
-import { isNumber } from 'util';
-import { User } from '../entities/user';
+import { findOneMockFromMocked } from './helpers';
 
-export const getMockedUserByField = <T>(fieldOptions: T): User => {
-  let items = mockedUsersFromDB;
-  const filters = isNumber(fieldOptions) ? { id: fieldOptions } : fieldOptions;
-
-  Object.keys(filters).forEach(k => {
-    items = items.filter(item => item[k] === filters[k]);
-  });
-  return items.length ? {...items[0]} : undefined;
-};
+export const getMockedUserByField = (fieldsToFind) => findOneMockFromMocked(fieldsToFind, mockedUsersFromDB);
 
 export const mockedUsersFromDB = [
   {

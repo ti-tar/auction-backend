@@ -1,13 +1,8 @@
 import { getMockedUserByField } from './users';
 import moment = require('moment');
+import { findOneMockFromMocked } from './helpers';
 
-export const getMockedLotByField = (fieldOptions) => {
-  let lot = mockedLotsFromDB;
-  Object.keys(fieldOptions).forEach(k => {
-    lot = lot.filter(l => l[k] === fieldOptions[k]);
-  });
-  return lot.length ? {...lot[0]} : undefined;
-};
+export const getMockedLotByField = (fieldsToFind) => findOneMockFromMocked(fieldsToFind, mockedLotsFromDB);
 
 export const mockedLotsFromDB = [
   { id: 1,
@@ -70,7 +65,7 @@ export const mockedLotsFromDB = [
     estimatedPrice: 3661,
     startTime: '2019-10-08T07:36:19.679Z',
     endTime: '2019-10-28T05:46:09.054Z',
-    user: null,
+    user: getMockedUserByField({id: 1}),
     bids: [],
   },
 ];
