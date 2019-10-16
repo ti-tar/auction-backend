@@ -9,6 +9,7 @@ import { EmailService } from '../email/email.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly loggerService: LoggerService,
     private readonly emailService: EmailService,
+    private readonly jwtService: JwtService,
   ) {}
 
   @UseInterceptors(LoginSerializerInterceptor)
@@ -146,5 +148,18 @@ export class AuthService {
     }
     this.loggerService.error(`Failed login attempt. Email: ${email}`);
     return null;
+  }
+
+  generateJWT(user: User) {
+    const today = new Date();
+    const exp = new Date(today);
+    exp.setDate(today.getDate() + 60);
+
+    return this.jwtService.sign({
+      id: user.id,
+      firstName: user.firstName,
+      email: user.email,
+      exp: exp.getTime() / 1000,
+    });
   }
 }

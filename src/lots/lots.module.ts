@@ -11,8 +11,6 @@ import { UsersService } from '../users/users.service';
 import { BidsService } from '../bids/bids.service';
 import { LoggerService } from '../shared/logger.service';
 import { ConfigService } from '../shared/config.service';
-import { JwtModule } from '@nestjs/jwt';
-import { SECRET } from '../config';
 import { LotsGateway } from './lots.gateway';
 import { OrdersService } from '../orders/orders.service';
 import { Order } from '../entities/order';
@@ -29,7 +27,6 @@ const configRedis: Redis.RedisOptions = {
   imports: [
     TypeOrmModule.forFeature([Lot, User, Bid, Order]),
     PassportModule,
-    JwtModule.register({ privateKey: SECRET }),
     BullModule.register({
       name: lotQueueName,
       options: {

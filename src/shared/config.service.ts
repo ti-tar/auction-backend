@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { randomBytes, createHmac } from 'crypto';
 import { SnakeNamingStrategy } from '../snake-naming.strategy';
-import { User } from '../entities/user';
+
 
 @Injectable()
 export class ConfigService {
-  constructor(
-    private readonly jwtService: JwtService,
-  ) {
+  constructor() {
     this.nodeEnv = this.get('NODE_ENV') || 'development';
     dotenv.config({ path: `.env.${this.nodeEnv}` });
     for (const envName of Object.keys(process.env)) {
@@ -62,19 +59,6 @@ export class ConfigService {
 
   getResetPasswordLink(token: string): string {
      return `${this.get('FRONTEND_URL')}auth/reset_email?token=${encodeURIComponent(token)}`;
-  }
-
-  generateJWT(user: User) {
-    const today = new Date();
-    const exp = new Date(today);
-    exp.setDate(today.getDate() + 60);
-
-    return this.jwtService.sign({
-      id: user.id,
-      firstName: user.firstName,
-      email: user.email,
-      exp: exp.getTime() / 1000,
-    });
   }
 
   get typeOrmConfig(): TypeOrmModuleOptions {

@@ -6,8 +6,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SharedModule } from '../shared/shared.module';
 import { ConfigService } from '../shared/config.service';
 import { UsersModule } from '../users/users.module';
-import { JwtModule } from '@nestjs/jwt';
-import { SECRET } from '../config';
 import { PassportModule } from '@nestjs/passport';
 import { User } from '../entities/user';
 import { DatabaseService } from '../../test/database/database.service';
@@ -24,7 +22,6 @@ import { TestUtilsService } from '../shared/test-utils.service';
       }),
     TypeOrmModule.forFeature([User]),
     PassportModule,
-    JwtModule.register({ secretOrPrivateKey: SECRET }),
   ],
   providers: [
     LoggerService, SeederService, UsersService, ConfigService, DatabaseService, TestUtilsService, LoggerService,

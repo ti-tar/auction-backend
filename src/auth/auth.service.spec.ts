@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
-import { JwtModule } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { LoggerService } from '../shared/logger.service';
 import MockedLoggerService from '../../test/services/mockedLogger.service';
 import { ConfigService } from '../shared/config.service';
-import { SECRET } from '../config';
 import { BadRequestException } from '@nestjs/common';
 import { mockedUsersFromDB, getMockedUserByField } from '../mockedData/users';
 import singingUpUser from '../mockedData/signup-user-request';
+import { JwtModule } from '@nestjs/jwt';
+import { SharedModule } from '../shared/shared.module';
 
 describe('AuthService', () => {
   let module: TestingModule;
@@ -19,13 +19,21 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-
       imports: [
-        JwtModule.register({ secretOrPrivateKey: SECRET }),
+        JwtModule.registerAsync({
+          useFactory: (configService: ConfigService) => ({
+            secret: configService.get('JWT_SECRET_KEY'),
+          }),
+          imports: [SharedModule],
+          inject: [ConfigService],
+        }),
       ],
       providers: [
         AuthService,
-        ConfigService,
+        {
+          provide: ConfigService,
+          useFactory: jest.fn(() => ({})),
+        },
         {
           provide: LoggerService,
           useClass: MockedLoggerService(),

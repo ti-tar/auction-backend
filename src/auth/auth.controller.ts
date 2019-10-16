@@ -7,8 +7,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { User } from '../entities/user';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { EmailService } from '../email/email.service';
-import { ConfigService } from '../shared/config.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -18,13 +16,12 @@ import { SignUpSerializerInterceptor } from './serializers/signup.interceptor';
 import { UserDecorator } from '../users/user.decorator';
 import { UserProfileSerializerInterceptor } from './serializers/user-profile.interceptor';
 
+
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UsersService,
-    private readonly emailService: EmailService,
-    private readonly configService: ConfigService,
   ) {}
 
   @UseGuards(AuthGuard('local'))
@@ -34,7 +31,7 @@ export class AuthController {
     const user = await this.authService.loginUser(loginUserDto);
     return {
       user,
-      jwtToken: this.configService.generateJWT(user),
+      jwtToken: this.authService.generateJWT(user),
     };
   }
 
@@ -52,7 +49,7 @@ export class AuthController {
     const user = await this.authService.verifyEmail(verifyUserData.token);
     return {
       user,
-      jwtToken: this.configService.generateJWT(user),
+      jwtToken: this.authService.generateJWT(user),
     };
   }
 

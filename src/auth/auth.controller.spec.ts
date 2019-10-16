@@ -4,8 +4,6 @@ import { AuthService } from './auth.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '../shared/config.service';
 import { UsersService } from '../users/users.service';
-import { JwtModule } from '@nestjs/jwt';
-import { SECRET } from '../config';
 import { LoggerService } from '../shared/logger.service';
 import MockedLoggerService from '../../test/services/mockedLogger.service';
 import { getMockedUserByField } from '../mockedData/users';
@@ -18,9 +16,6 @@ describe('Auth Controller', () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        JwtModule.register({ secretOrPrivateKey: SECRET }),
-      ],
       controllers: [AuthController],
       providers: [
         {
@@ -31,6 +26,7 @@ describe('Auth Controller', () => {
             verifyEmail: jest.fn((token) => getMockedUserByField({ token })),
             forgotPassword: jest.fn(() => ''),
             resetPassword: jest.fn(() => ''),
+            generateJWT: jest.fn(() => '' ),
           }),
         },
         {
@@ -43,7 +39,13 @@ describe('Auth Controller', () => {
             findOneById: jest.fn((id) => getMockedUserByField({id})),
           }),
         },
-        ConfigService, EmailService,
+        {
+          provide: ConfigService,
+          useFactory: jest.fn(() => ({
+            getEmailOptions: jest.fn(() => ({}) ),
+          })),
+        },
+        EmailService,
       ],
     }).compile();
 
@@ -69,7 +71,6 @@ describe('Auth Controller', () => {
         jwtToken: expect.any(String),
         user,
       }));
-
   });
 
   it('singUp', async () => {
@@ -103,8 +104,7 @@ describe('Auth Controller', () => {
 
   it('profile', async () => {
     const user = getMockedUserByField({ id: 1 });
-    expect(await authController.profile(user))
-      .toStrictEqual(user);
+    expect(await authController.profile(user)).toStrictEqual(user);
   });
 
 });
