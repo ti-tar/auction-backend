@@ -1,11 +1,10 @@
-import { Queue, OnQueueEvent, BullQueueEvents, OnQueueActive, InjectQueue, QueueProcess } from 'nest-bull';
+import { Processor, OnQueueEvent, BullQueueEvents, OnQueueActive, InjectQueue, Process } from 'nest-bull';
 import { Job, JobOptions, Queue as QueueType } from 'bull';
 import { LoggerService } from '../shared/logger.service';
-import { LotsService } from './lots.service';
 
 export const lotQueueName = 'lot-jobs';
 
-@Queue({ name: lotQueueName })
+@Processor({ name: lotQueueName })
 export class LotJobsService {
   constructor(
     @InjectQueue(lotQueueName) readonly queue: QueueType,
@@ -18,7 +17,7 @@ export class LotJobsService {
     this.loggerService.log(`Job ${job.name} added to queue '${lotQueueName}'`);
   }
 
-  @QueueProcess({ name: 'setEndLotTimeJob' })
+  @Process({ name: 'setEndLotTimeJob' })
   async processLotsCreated(job) {
     // const lot = await this.lotsService.findOne({ where: {id : job.data.id}, relations: ['user', 'bids'] });
     // if (lot.status === 'inProcess') {
