@@ -9,8 +9,9 @@ import { getMockedBidByField, mockedBids } from '../mockedData/bids';
 import { Repository } from 'typeorm';
 import { getMockedLotByField } from '../mockedData/lots';
 import { getMockedUserByField } from '../mockedData/users';
+import { EmailService } from '../email/email.service';
 
-describe('BidsService', () => {
+describe('Bids Service', () => {
   let testingModule: TestingModule;
   let bidsService: BidsService;
   let ordersService: OrdersService;
@@ -41,6 +42,11 @@ describe('BidsService', () => {
           provide: OrdersService,
           useFactory: jest.fn(() => ({
             create: jest.fn(() => ''),
+          })),
+        },
+        {
+          provide: EmailService,
+          useFactory: jest.fn(() => ({
           })),
         },
       ],

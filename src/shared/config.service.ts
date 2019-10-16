@@ -4,7 +4,6 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { randomBytes, createHmac } from 'crypto';
 import { SnakeNamingStrategy } from '../snake-naming.strategy';
 
-
 @Injectable()
 export class ConfigService {
   constructor() {
@@ -32,10 +31,13 @@ export class ConfigService {
     };
   }
 
-  get pagination() {
+  get config() {
     return {
-      perPage: parseInt(this.get('PAGINATION_PER_PAGE'), 10),
-      page: 1,
+      email: this.get('EMAIL'),
+      pagination: {
+        perPage: parseInt(this.get('PAGINATION_PER_PAGE'), 10),
+        page: 1,
+      },
     };
   }
 

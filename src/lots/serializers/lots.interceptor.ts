@@ -25,8 +25,8 @@ export class LotsSerializerInterceptor<T extends PaginationResultInterface<Lot>>
     return next.handle().pipe(map(({ data, total }: PaginationResultInterface<Lot>) => ({
       resources: data,
       meta: {
-          page: query.page || this.configService.pagination.page,
-          perPage: this.configService.pagination.perPage,
+          page: query.page || this.configService.config.pagination.page,
+          perPage: this.configService.config.pagination.perPage,
           total,
         },
       }),

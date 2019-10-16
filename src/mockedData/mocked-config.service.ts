@@ -27,10 +27,13 @@ export class MockConfigService {
     };
   }
 
-  get pagination() {
+  get config() {
     return {
-      page: 1,
-      perPage: 4,
+      email: this.get('EMAIL'),
+      pagination: {
+        perPage: parseInt(this.get('PAGINATION_PER_PAGE'), 10),
+        page: 1,
+      },
     };
   }
 }

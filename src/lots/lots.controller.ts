@@ -48,7 +48,7 @@ export class LotsController {
   @Get()
   async getAllLots(@Request() request): Promise<Pagination<Lot>> {
     return this.lotsService.findAndCountLotsInProcess({
-      page: request.query.page || this.configService.pagination.page,
+      page: request.query.page || this.configService.config.pagination.page,
     });
   }
 
@@ -62,7 +62,7 @@ export class LotsController {
   @Get('own/lots')
   async getAllLotsByUserId(@UserDecorator() user: User, @Request() request): Promise<Pagination<Lot>> {
     return this.lotsService.findAndCountLotsByUserId(user.id, {
-      page: request.query.page || this.configService.pagination.page,
+      page: request.query.page || this.configService.config.pagination.page,
     });
   }
 
@@ -76,7 +76,7 @@ export class LotsController {
   @Get('own/bids')
   async getAllLotsByBidUserId(@UserDecorator() user: UserDecoratorInterface, @Request() request): Promise<Pagination<Lot>> {
     return this.lotsService.findAndCountLotsByBidUserId(user.id, {
-      page: request.query.page || this.configService.pagination.page,
+      page: request.query.page || this.configService.config.pagination.page,
     });
   }
 

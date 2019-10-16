@@ -17,6 +17,7 @@ import { Order } from '../entities/order';
 import { BullModule } from 'nest-bull';
 import { LotJobsService, lotQueueName } from './lot-jobs.service';
 import { ImagesService } from '../images/images.service';
+import { EmailService } from '../email/email.service';
 
 const configRedis: Redis.RedisOptions = {
   host: 'localhost',
@@ -38,7 +39,7 @@ const configRedis: Redis.RedisOptions = {
     LotsService, UsersService, BidsService,
     LoggerService, ConfigService,
     LotsGateway, OrdersService,
-    LotJobsService, ImagesService,
+    LotJobsService, ImagesService, EmailService,
   ],
   controllers: [LotsController],
 })

@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToOne } from 'typeor
 import { Bid } from './bid';
 
 enum TypeStatus {
+  pending = 'pending',
   royal_mail = 'Royal Mail',
   united_states_postal_service = 'United States Postal Service',
   dhl_expres = 'DHL Express',

@@ -3,6 +3,7 @@ import { LoggerService } from '../shared/logger.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from '../entities/order';
+import { CreateOrderDto } from './dto/create-lot.dto';
 
 @Injectable()
 export class OrdersService {
@@ -11,11 +12,11 @@ export class OrdersService {
     private readonly loggerService: LoggerService,
   ) {}
 
-  async create(): Promise<Order> {
+  async create(orderData: CreateOrderDto): Promise<Order> {
     const newOrder = new Order();
-    newOrder.arrivalLocation = 'test address';
-    newOrder.type = 'Royal Mail';
-    newOrder.status = 'pending';
+    newOrder.arrivalLocation = orderData.arrivalLocation;
+    newOrder.type = orderData.type;
+    newOrder.status = orderData.status;
 
     this.loggerService.log(`New Order Created! Arrival Location: ${newOrder.arrivalLocation}`);
 

@@ -59,4 +59,6 @@ describe('EmailService', () => {
     expect(sentEmailInfo).toEqual(expect.objectContaining({ to: mockedUser.email }));
   });
 
+  it.todo('sendYouWinMailOnBuyItNowToBidOwner');
+  it.todo('sendYourLotWonMailOnBuyItNowToLotOwner');
 });

@@ -7,13 +7,18 @@ import { CreateBidDto } from './dto/create-bid.dto';
 import { User } from '../entities/user';
 import { LotsGateway } from '../lots/lots.gateway';
 import { OrdersService } from '../orders/orders.service';
+import { EmailService } from '../email/email.service';
+import { LoggerService } from '../shared/logger.service';
 
 @Injectable()
 export class BidsService {
   constructor(
     @InjectRepository(Bid) private bidsRepository: Repository<Bid>,
+    @InjectRepository(Lot) private readonly lotsRepository: Repository<Lot>,
     private readonly lotsGateway: LotsGateway,
     private readonly ordersService: OrdersService,
+    private readonly emailService: EmailService,
+    private readonly loggerService: LoggerService,
   ) {}
 
   async findAllBidsByLotId(lotId: number): Promise<[Bid[], number]> {
@@ -59,8 +64,21 @@ export class BidsService {
     });
 
     if ( bidData.proposedPrice >= lot.estimatedPrice ) {
-      await this.ordersService.create();
-      // todo email and etc
+      this.loggerService.log('Bid is over lot\'s estimated price');
+      lot.status = 'closed';
+      await this.lotsRepository.save(lot);
+      this.loggerService.log('Lot updated, status = closed');
+      await this.ordersService.create({
+        arrivalLocation: 'pending',
+        type: 'pending',
+        status: 'pending',
+      });
+      this.loggerService.log('Order created');
+      // letters
+      await this.emailService.sendYouWinMailOnBuyItNowToBidOwner(user, lot.user, lot);
+      await this.emailService.sendYourLotWonMailOnBuyItNowToLotOwner(lot.user, user, lot);
+      // web sockets notifications
+
     }
 
     return savedBid;

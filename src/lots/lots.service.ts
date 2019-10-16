@@ -23,8 +23,8 @@ export class LotsService {
     const [data, total] = await this.lotsRepository.findAndCount({
       where: { status: 'inProcess' },
       relations: ['user', 'bids'],
-      take: this.configService.pagination.perPage,
-      skip: this.configService.pagination.perPage * (paginateOptions.page - 1),
+      take: this.configService.config.pagination.perPage,
+      skip: this.configService.config.pagination.perPage * (paginateOptions.page - 1),
     });
 
     return new Pagination<Lot>({data, total});
@@ -34,8 +34,8 @@ export class LotsService {
     const [data, total] = await this.lotsRepository.findAndCount({
       where: { user: { id } },
       relations: ['user', 'bids'],
-      take: this.configService.pagination.perPage,
-      skip: this.configService.pagination.perPage * (paginateOptions.page - 1),
+      take: this.configService.config.pagination.perPage,
+      skip: this.configService.config.pagination.perPage * (paginateOptions.page - 1),
     });
 
     return new Pagination<Lot>({data, total});
@@ -47,8 +47,8 @@ export class LotsService {
       .leftJoinAndSelect('lots.bids', 'bids')
       .leftJoinAndSelect('bids.user', 'bidsuser')
       .where('bidsuser.id = :id', { id: userId })
-      .take(this.configService.pagination.perPage)
-      .skip(this.configService.pagination.perPage * (paginateOptions.page - 1))
+      .take(this.configService.config.pagination.perPage)
+      .skip(this.configService.config.pagination.perPage * (paginateOptions.page - 1))
       .getManyAndCount();
 
     return new Pagination<Lot>({data, total});
