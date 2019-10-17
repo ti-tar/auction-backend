@@ -2,19 +2,21 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
 import { DeleteResult, Repository } from 'typeorm';
+import { InjectQueue } from 'nest-bull';
+import { Queue } from 'bull';
 import { Lot } from '../entities/lot';
 import { CreateLotDto } from './dto/create-lot.dto';
 import { User } from '../entities/user';
 import { LoggerService } from '../shared/logger.service';
-import { LotJobsService } from './lot-jobs.service';
 import { Pagination } from '../shared/pagination';
 import { ConfigService } from '../shared/config.service';
+import { JOBS, QUEUE_NAMES } from '../jobs/jobsList';
 
 @Injectable()
 export class LotsService {
   constructor(
     @InjectRepository(Lot) private lotsRepository: Repository<Lot>,
-    private readonly lotJobsService: LotJobsService,
+    @InjectQueue(QUEUE_NAMES.LOTS) private readonly queue: Queue,
     private readonly loggerService: LoggerService,
     private readonly configService: ConfigService,
   ) {}
@@ -87,8 +89,8 @@ export class LotsService {
     try {
       await this.lotsRepository.save(lot);
       const delay: number = moment(lot.endTime).valueOf() - moment().valueOf();
-      this.loggerService.log(`Lot Created. Lot: id ${lot.id} '${lot.title}'. User '${user.firstName}', id: ${user.id}.`);
-      await this.lotJobsService.addJob('setEndLotTimeJob', lot, { delay });
+      this.loggerService.log(`Set Lot ToAuction. Lot: id ${lot.id} '${lot.title}'. User '${user.firstName}', id: ${user.id}.`);
+      await this.queue.add(JOBS.LOT_END_TIME_JOB, lot, { delay });
       this.loggerService.log(`Job. Lot Create Event. Set job to lot endTime handling. Lot id: ${lot.id}. ` +
         `Job start/endTime - ${moment(lot.startTime).toISOString()}/${moment(lot.endTime).toISOString()}. Delay time: ${delay / 1000} seconds.`);
       return lot;

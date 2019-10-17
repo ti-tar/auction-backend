@@ -5,4 +5,3 @@ import { ConfigService } from './config.service';
   providers: [ ConfigService ],
 })
 export class ConfigModule {}
-

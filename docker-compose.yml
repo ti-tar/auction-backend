@@ -16,14 +16,24 @@ services:
       POSTGRES_USER: user_test
       POSTGRES_PASSWORD: password_test
       POSTGRES_DB: auction_test
+  admin:
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 8080:8080
   redis:
     image: redis:alpine
     ports:
       - 6379:6379
-  admin:
-    image: adminer
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
     restart: always
-    depends_on: 
-      - db
+    environment:
+      - REDIS_HOSTS=local:redis:6379
     ports:
-      - 8080:8080
+      - 8081:8081
+

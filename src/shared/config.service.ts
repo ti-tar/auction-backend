@@ -19,6 +19,9 @@ export class ConfigService {
   public get(key: string): string {
     return process.env[key];
   }
+  public getNumber(key: string): number {
+    return parseInt(process.env[key], 10);
+  }
 
   getEmailOptions() {
     return {
@@ -37,6 +40,10 @@ export class ConfigService {
       pagination: {
         perPage: parseInt(this.get('PAGINATION_PER_PAGE'), 10),
         page: 1,
+      },
+      configRedis: {
+        host: this.get('REDIS_HOST'),
+        port: this.getNumber('REDIS_PORT'),
       },
     };
   }

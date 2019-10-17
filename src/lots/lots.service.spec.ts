@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { LotsService } from './lots.service';
 import { Lot } from '../entities/lot';
 import { Pagination } from '../shared/pagination';
-import { LotJobsService } from './lot-jobs.service';
+import { LotsJobs } from '../jobs/lots.jobs';
 import { LoggerService } from '../shared/logger.service';
 import { ConfigService } from '../shared/config.service';
 import MockedLoggerService from '../../test/services/mockedLogger.service';
@@ -25,7 +25,7 @@ describe('Lots Service', () => {
     testingModule = await Test.createTestingModule({
       providers: [
         LotsService,
-        { provide: LotJobsService,
+        { provide: LotsJobs,
           useFactory: () => ({
             addJob: jest.fn( () => ''),
           }),

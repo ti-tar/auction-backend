@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
-import * as Redis from 'ioredis';
 import { LotsController } from './lots.controller';
 import { Lot } from '../entities/lot';
 import { User } from '../entities/user';
@@ -14,32 +13,21 @@ import { ConfigService } from '../shared/config.service';
 import { LotsGateway } from './lots.gateway';
 import { OrdersService } from '../orders/orders.service';
 import { Order } from '../entities/order';
-import { BullModule } from 'nest-bull';
-import { LotJobsService, lotQueueName } from './lot-jobs.service';
 import { ImagesService } from '../images/images.service';
 import { EmailService } from '../email/email.service';
-
-const configRedis: Redis.RedisOptions = {
-  host: 'localhost',
-  port: 6379,
-};
+import { JobsModule } from '../jobs/jobs.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Lot, User, Bid, Order]),
     PassportModule,
-    BullModule.register({
-      name: lotQueueName,
-      options: {
-        redis: configRedis,
-      },
-    }),
+    JobsModule,
   ],
   providers: [
     LotsService, UsersService, BidsService,
     LoggerService, ConfigService,
     LotsGateway, OrdersService,
-    LotJobsService, ImagesService, EmailService,
+    ImagesService, EmailService,
   ],
   controllers: [LotsController],
 })
