@@ -35,8 +35,8 @@ export class LoggerService {
     }
   }
 
-  log(message: string): void {
-    this.logger.info(LoggerService.getColoredRows('info', message));
+  log(message: string | number | boolean): void {
+    this.logger.info(LoggerService.getColoredRows('info', String(message)));
   }
 
   error(errorOrMessage: any ): void { // todo change any letter

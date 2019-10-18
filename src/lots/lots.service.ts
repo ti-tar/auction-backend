@@ -87,12 +87,14 @@ export class LotsService {
     }
 
     try {
+      this.loggerService.log(`Lot. Set 'status=inProcess'. Lot: '${lot.title}'(${lot.id}). User ${user.firstName}(${user.id}).`);
       await this.lotsRepository.save(lot);
+
       const delay: number = moment(lot.endTime).valueOf() - moment().valueOf();
-      this.loggerService.log(`Set Lot ToAuction. Lot: id ${lot.id} '${lot.title}'. User '${user.firstName}', id: ${user.id}.`);
+      this.loggerService.log(`Job. Lot endTime status handling. Lot: ${lot.title} (${lot.id}). ` +
+        `Job start/end time - ${moment(lot.startTime).toISOString()}/${moment(lot.endTime).toISOString()}. Delay ${delay / 1000} sec.`);
       await this.queue.add(JOBS.LOT_END_TIME_JOB, lot, { delay });
-      this.loggerService.log(`Job. Lot Create Event. Set job to lot endTime handling. Lot id: ${lot.id}. ` +
-        `Job start/endTime - ${moment(lot.startTime).toISOString()}/${moment(lot.endTime).toISOString()}. Delay time: ${delay / 1000} seconds.`);
+
       return lot;
     } catch (e) {
       throw new BadRequestException('Error occurred during setting lot to auction!');

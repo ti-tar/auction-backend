@@ -5,7 +5,7 @@ import { UsersService } from '../users/users.service';
 import { ConfigService } from '../shared/config.service';
 import { LoginSerializerInterceptor } from './serializers/login.interceptor';
 import { LoggerService } from '../shared/logger.service';
-import { EmailService } from '../email/email.service';
+import { EmailService } from '../emails/email.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LoginUserDto } from './dto/login-user.dto';

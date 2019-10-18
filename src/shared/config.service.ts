@@ -26,7 +26,7 @@ export class ConfigService {
   getEmailOptions() {
     return {
       host: this.get('MAILTRIP_HOST'),
-      port: parseInt(this.get('MAILTRIP_PORT'), 10),
+      port: this.getNumber('MAILTRIP_PORT'),
       auth: {
         user: this.get('MAILTRIP_USER'),
         pass: this.get('MAILTRIP_PASS'),

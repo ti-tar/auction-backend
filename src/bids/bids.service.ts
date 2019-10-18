@@ -1,20 +1,24 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Queue } from 'bull';
 import { Lot } from '../entities/lot';
 import { Bid } from '../entities/bid';
 import { CreateBidDto } from './dto/create-bid.dto';
 import { User } from '../entities/user';
 import { LotsGateway } from '../lots/lots.gateway';
 import { OrdersService } from '../orders/orders.service';
-import { EmailService } from '../email/email.service';
+import { EmailService } from '../emails/email.service';
 import { LoggerService } from '../shared/logger.service';
+import { InjectQueue } from 'nest-bull';
+import { EMAILS, QUEUE_NAMES } from '../jobs/jobsList';
 
 @Injectable()
 export class BidsService {
   constructor(
     @InjectRepository(Bid) private bidsRepository: Repository<Bid>,
     @InjectRepository(Lot) private readonly lotsRepository: Repository<Lot>,
+    @InjectQueue(QUEUE_NAMES.EMAILS) private readonly queue: Queue,
     private readonly lotsGateway: LotsGateway,
     private readonly ordersService: OrdersService,
     private readonly emailService: EmailService,
@@ -49,7 +53,7 @@ export class BidsService {
       throw new BadRequestException('Bid should be higher current price.');
     }
 
-    const savedBid =  await this.bidsRepository.save({
+    const savedBid = await this.bidsRepository.save({
       proposedPrice: bidData.proposedPrice,
       bidCreationTime: new Date(),
       user,
@@ -57,28 +61,28 @@ export class BidsService {
     });
 
     this.lotsGateway.bidsUpdate({
-      message: `Someone just added new bid for lot '${lot.title}'[${lot.id}]`,
+      message: `${user.firstName} just added new bid for lot '${lot.title}'[${lot.id}]`,
       params: {
         lotId: lot.id,
       },
     });
 
     if ( bidData.proposedPrice >= lot.estimatedPrice ) {
+
       this.loggerService.log('Bid is over lot\'s estimated price');
       lot.status = 'closed';
       await this.lotsRepository.save(lot);
       this.loggerService.log('Lot updated, status = closed');
-      await this.ordersService.create({
-        arrivalLocation: 'pending',
-        type: 'pending',
-        status: 'pending',
-      });
-      this.loggerService.log('Order created');
-      // letters
-      await this.emailService.sendYouWinMailOnBuyItNowToBidOwner(user, lot.user, lot);
-      await this.emailService.sendYourLotWonMailOnBuyItNowToLotOwner(lot.user, user, lot);
-      // web sockets notifications
 
+      await this.ordersService.create();
+      this.loggerService.log('Order created');
+
+      // letters
+      await this.queue.add(EMAILS.EMAIL_BUY_IT_NOW_BETTING_USER, { owner: lot.user, buyer: user, lot }, { attempts: 5 });
+      await this.queue.add(EMAILS.EMAIL_BUY_IT_NOW_LOT_OWNER, { owner: lot.user, buyer: user, lot }, { attempts: 5 });
+
+      // web sockets notifications
+      // todo this.lotsGateway.buyItNow({})
     }
 
     return savedBid;

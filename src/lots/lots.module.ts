@@ -8,13 +8,10 @@ import { Bid } from '../entities/bid';
 import { LotsService } from './lots.service';
 import { UsersService } from '../users/users.service';
 import { BidsService } from '../bids/bids.service';
-import { LoggerService } from '../shared/logger.service';
-import { ConfigService } from '../shared/config.service';
 import { LotsGateway } from './lots.gateway';
 import { OrdersService } from '../orders/orders.service';
 import { Order } from '../entities/order';
 import { ImagesService } from '../images/images.service';
-import { EmailService } from '../email/email.service';
 import { JobsModule } from '../jobs/jobs.module';
 
 @Module({
@@ -25,9 +22,8 @@ import { JobsModule } from '../jobs/jobs.module';
   ],
   providers: [
     LotsService, UsersService, BidsService,
-    LoggerService, ConfigService,
     LotsGateway, OrdersService,
-    ImagesService, EmailService,
+    ImagesService,
   ],
   controllers: [LotsController],
 })

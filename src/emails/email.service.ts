@@ -54,8 +54,7 @@ export class EmailService {
     });
   }
 
-  async sendYouWinMailOnBuyItNowToBidOwner(userBidOwner, userLotOwner, lot): Promise<SentMessageInfo> {
-    this.loggerService.log(`EmailService: sendYouWinMailOnBuyItNowToBidOwner method`);
+  async sendBuyItNowToBuyer(userBidOwner, userLotOwner, lot): Promise<SentMessageInfo> {
     return this.sendEmail( {
       from: this.from,
       to: userBidOwner.email,
@@ -67,8 +66,7 @@ export class EmailService {
     });
   }
 
-  async sendYourLotWonMailOnBuyItNowToLotOwner(userLotOwner, userBidOwner, lot): Promise<SentMessageInfo> {
-    this.loggerService.log(`EmailService: sendYourLotWonMailOnBuyItNowToLotOwner method`);
+  async sendBuyItNowToOwner(userLotOwner, userBidOwner, lot): Promise<SentMessageInfo> {
     return this.sendEmail( {
       from: this.from,
       to: userLotOwner.email,

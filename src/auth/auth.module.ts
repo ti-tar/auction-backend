@@ -8,9 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
-import { EmailService } from '../email/email.service';
 import { ConfigService } from '../shared/config.service';
-import { LoggerService } from '../shared/logger.service';
 import { JwtModule } from '@nestjs/jwt';
 import { SharedModule } from '../shared/shared.module';
 
@@ -30,7 +28,6 @@ import { SharedModule } from '../shared/shared.module';
   providers: [
     UsersService, AuthService,
     JwtStrategy, LocalStrategy,
-    EmailService, ConfigService, LoggerService,
   ],
   controllers: [AuthController],
   exports: [AuthService],

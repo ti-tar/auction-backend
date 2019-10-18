@@ -21,6 +21,7 @@ import { LoggerService } from '../shared/logger.service';
 import { LotsSerializerInterceptor } from './serializers/lots.interceptor';
 import { LotSerializerInterceptor } from './serializers/lot.interceptor';
 import { BidsSerializerInterceptor } from '../bids/serializers/bids.interceptor';
+import { BidSerializerInterceptor } from '../bids/serializers/bid.interceptor';
 import { ImageUploadSerializerInterceptor } from '../images/serializers/image-upload.interceptor';
 import { UserDecorator, UserDecoratorInterface } from '../users/user.decorator';
 import { LotEditValidationPipe } from '../pipes/lot-edit-validation-pipe.service';
@@ -128,7 +129,7 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(BidsSerializerInterceptor)
+  @UseInterceptors(BidSerializerInterceptor)
   @Post(':lotId/bids')
   async addBid(
     @Param('lotId') lotId: number,
