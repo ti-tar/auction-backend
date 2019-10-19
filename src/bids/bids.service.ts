@@ -77,7 +77,6 @@ export class BidsService {
       await this.ordersService.create();
       this.loggerService.log('Order created');
 
-      // letters
       await this.queue.add(EMAILS.EMAIL_BUY_IT_NOW_BETTING_USER, { owner: lot.user, buyer: user, lot }, { attempts: 5 });
       await this.queue.add(EMAILS.EMAIL_BUY_IT_NOW_LOT_OWNER, { owner: lot.user, buyer: user, lot }, { attempts: 5 });
 

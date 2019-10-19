@@ -3,8 +3,6 @@ import { createTransport, SentMessageInfo } from 'nodemailer';
 import { ConfigService } from '../shared/config.service';
 import { LoggerService } from '../shared/logger.service';
 import { User } from '../entities/user';
-// import * as Mail from 'nodemailer/lib/mailer';
-import * as SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 @Injectable()
 export class EmailService {
@@ -25,7 +23,6 @@ export class EmailService {
   async sendVerificationEmail(user: User): Promise<SentMessageInfo> {
     const verifyLink = this.configService.getVerifyLink(user.token);
     return this.sendEmail( {
-      from: this.from,
       to: user.email,
       subject: 'Letter to verify your registration',
       text: 'Hi! To complete registration follow link: ' + `${verifyLink}`,
@@ -35,7 +32,6 @@ export class EmailService {
 
   async sendApprovalEmail(user: User): Promise<SentMessageInfo> {
     return this.sendEmail( {
-      from: this.from,
       to: user.email,
       subject: 'You were verified!',
       text: 'Hi! You were verified. Thank you',
@@ -46,7 +42,6 @@ export class EmailService {
   async sendForgotPasswordMail(user: User): Promise<SentMessageInfo> {
     const resetPassLink = this.configService.getResetPasswordLink(user.token);
     return this.sendEmail( {
-      from: this.from,
       to: user.email,
       subject: 'Email to reset password.',
       text: 'Hi! Reset pass on auction site. Your link: ' + `${resetPassLink}`,
@@ -56,7 +51,6 @@ export class EmailService {
 
   async sendBuyItNowToBuyer(userBidOwner, userLotOwner, lot): Promise<SentMessageInfo> {
     return this.sendEmail( {
-      from: this.from,
       to: userBidOwner.email,
       subject: `You ve bidded over estimated price on lot ${lot.title}`,
       text: `Congratulations. You ve bidded over estimated price on lot ${lot.title}`,
@@ -68,7 +62,6 @@ export class EmailService {
 
   async sendBuyItNowToOwner(userLotOwner, userBidOwner, lot): Promise<SentMessageInfo> {
     return this.sendEmail( {
-      from: this.from,
       to: userLotOwner.email,
       subject: `User '${userBidOwner.firstName}' bidded over estimated price on lot '${lot.title}'(id: ${lot.id})`,
       text: `Auction user '${userBidOwner.firstName}' bidded over estimated price on lot '${lot.title}'(id: ${lot.id}).`
@@ -78,19 +71,37 @@ export class EmailService {
     });
   }
 
+  async sendLotEndTimeToBuyer(owner, buyer, lot): Promise<SentMessageInfo> {
+    return this.sendEmail( {
+      to: buyer.email,
+      subject: `Lot '${lot.title}' end time has passed.`,
+      text: `Lot '${lot.title}' end time has passed.` ,
+      html: `<h1>H1</h1><p>Lot '${lot.title}' end time has passed.</p><p>You are the winner. Congratulations.</p>`,
+    });
+  }
+
+  async sendLotEndTimeToOwner(owner, lot): Promise<SentMessageInfo> {
+    return this.sendEmail( {
+      to: owner.email,
+      subject: `Lot '${lot.title}' end time has passed.`,
+      text: `Lot '${lot.title}' end time has passed.` ,
+      html: `<h1>H1</h1><p>Lot '${lot.title}' end time has passed.</p><p>Please, follow <a>link</a> to find if there is any bids.</p>`,
+    });
+  }
+
   // async name(user, lot): Promise<SentMessageInfo> {
   //   return this.sendEmail( {
   //     from: this.from,
   //     to: user.email,
   //     subject: '',
   //     text: 'The' ,
-  //     html: `dfohjspdfogjp`,
+  //     html: `text`,
   //   });
   // }
 
-  async sendEmail(emailObject: SMTPTransport.Options): Promise<SentMessageInfo> {
+  async sendEmail(emailObject): Promise<SentMessageInfo> {
     try {
-      return await this.transport.sendMail(emailObject);
+      return await this.transport.sendMail({from: this.from, ...emailObject});
     } catch (error) {
       this.loggerService.error(error);
       throw new NotImplementedException('Email not sent.');

@@ -93,7 +93,7 @@ export class LotsService {
       const delay: number = moment(lot.endTime).valueOf() - moment().valueOf();
       this.loggerService.log(`Job. Lot endTime status handling. Lot: ${lot.title} (${lot.id}). ` +
         `Job start/end time - ${moment(lot.startTime).toISOString()}/${moment(lot.endTime).toISOString()}. Delay ${delay / 1000} sec.`);
-      await this.queue.add(JOBS.LOT_END_TIME_JOB, lot, { delay });
+      await this.queue.add(JOBS.LOT_END_TIME_JOB, { lotId: lot.id}, { delay });
 
       return lot;
     } catch (e) {
@@ -134,6 +134,10 @@ export class LotsService {
       this.loggerService.error(errors);
       throw new BadRequestException('Error occurred during updating lot!');
     }
+  }
+
+  async save(lot) {
+    return this.lotsRepository.save(lot);
   }
 
   private handleLot(lot: Lot, lotRequest, user: User): Lot {

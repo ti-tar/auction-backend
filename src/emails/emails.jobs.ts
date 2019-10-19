@@ -25,6 +25,20 @@ export class EmailsJobs {
     return `Email sent to ${sentMail.envelope.to.join(', ')}`;
   }
 
+  @Process({ name: EMAILS.EMAIL_LOT_END_TIME_BUYER })
+  async sendLotEndTimeToBuyer(job) {
+    const { buyer, owner, lot } = job.data;
+    const sentMail = await this.emailService.sendLotEndTimeToBuyer(buyer, owner, lot);
+    return `Email sent to ${sentMail.envelope.to.join(', ')}`;
+  }
+
+  @Process({ name: EMAILS.EMAIL_LOT_END_TIME_OWNER })
+  async sendLotEndTimeToOwner(job) {
+    const { owner, lot } = job.data;
+    const sentMail = await this.emailService.sendLotEndTimeToOwner(owner, lot);
+    return `Email sent to ${sentMail.envelope.to.join(', ')}`;
+  }
+
   @OnQueueActive()
   onActive(job: Job<any>) {
     this.loggerService.log(`Processing email job: ${job.name} (${job.id})`);

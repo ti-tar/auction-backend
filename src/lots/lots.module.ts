@@ -26,5 +26,6 @@ import { JobsModule } from '../jobs/jobs.module';
     ImagesService,
   ],
   controllers: [LotsController],
+  exports: [LotsService, TypeOrmModule],
 })
 export class LotsModule {}
