@@ -45,6 +45,10 @@ export class ConfigService {
         host: this.get('REDIS_HOST'),
         port: this.getNumber('REDIS_PORT'),
       },
+      jwt: {
+        secretKey: this.get('JWT_SECRET_KEY'),
+        expirationTime: this.getNumber('JWT_EXPIRATION_TIME'),
+      },
     };
   }
 

@@ -151,15 +151,11 @@ export class AuthService {
   }
 
   generateJWT(user: User) {
-    const today = new Date();
-    const exp = new Date(today);
-    exp.setDate(today.getDate() + 60);
-
     return this.jwtService.sign({
       id: user.id,
       firstName: user.firstName,
       email: user.email,
-      exp: exp.getTime() / 1000,
+      exp: ((new Date()).getTime() + this.configService.config.jwt.expirationTime * 1000) / 1000,
     });
   }
 }

@@ -1,5 +1,5 @@
 import {
-  Controller, UsePipes, Get, Post, Body, UseGuards, Request, BadRequestException, UseInterceptors,
+  Controller, UsePipes, Get, Post, Body, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ValidationPipe } from '../pipes/validation.pipe';
@@ -15,7 +15,6 @@ import { LoginSerializerInterceptor } from './serializers/login.interceptor';
 import { SignUpSerializerInterceptor } from './serializers/signup.interceptor';
 import { UserDecorator } from '../users/user.decorator';
 import { UserProfileSerializerInterceptor } from './serializers/user-profile.interceptor';
-
 
 @Controller('auth')
 export class AuthController {

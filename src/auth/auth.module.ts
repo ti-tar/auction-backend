@@ -16,7 +16,7 @@ import { SharedModule } from '../shared/shared.module';
   imports: [
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET_KEY'),
+        secret: configService.config.jwt.secretKey,
       }),
       imports: [SharedModule],
       inject: [ConfigService],
