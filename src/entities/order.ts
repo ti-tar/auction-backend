@@ -1,14 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToOne, JoinColumn } from 'typeorm';
 import { Bid } from './bid';
 
-enum TypeStatus {
+export enum TypeStatus {
   pending = 'pending',
   royal_mail = 'Royal Mail',
   united_states_postal_service = 'United States Postal Service',
   dhl_expres = 'DHL Express',
 }
 
-enum Status {
+export enum Status {
   pending = 'pending',
   sent = 'sent',
   delivered = 'delivered',
@@ -29,5 +29,6 @@ export class Order {
   status: string;
 
   @OneToOne(type => Bid, bid => bid.proposedPrice)
+  @JoinColumn()
   bid: Bid;
 }

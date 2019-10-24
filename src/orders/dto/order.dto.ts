@@ -1,15 +1,17 @@
 import { IsString, IsNotEmpty } from 'class-validator';
 
-export class CreateOrderDto {
+import { Status, TypeStatus } from '../../entities/order';
+
+export class OrderDto {
   @IsString()
   @IsNotEmpty()
   readonly arrivalLocation: string;
 
   @IsString()
   @IsNotEmpty()
-  readonly type: string;
+  readonly type: TypeStatus;
 
   @IsString()
   @IsNotEmpty()
-  readonly status: string;
+  readonly status: Status;
 }

@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
 import { ConfigService } from './shared/config.service';
 import { SharedModule } from './shared/shared.module';
 import { LotsModule } from './lots/lots.module';

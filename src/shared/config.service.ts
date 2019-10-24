@@ -36,6 +36,7 @@ export class ConfigService {
 
   get config() {
     return {
+      frontendUrl: this.get('FRONTEND_URL'),
       email: this.get('EMAIL'),
       pagination: {
         perPage: parseInt(this.get('PAGINATION_PER_PAGE'), 10),

@@ -12,6 +12,8 @@ import { Bid } from '../entities/bid';
 import { Order } from '../entities/order';
 import { OrdersService } from '../orders/orders.service';
 import { UsersService } from '../users/users.service';
+import { BidsService } from '../bids/bids.service';
+import { LotsGateway } from '../lots/lots.gateway';
 
 @Module({
   imports: [
@@ -40,7 +42,7 @@ import { UsersService } from '../users/users.service';
     ]),
   ],
   providers: [
-    LotsJobs, EmailsJobs, LotsService, OrdersService, UsersService,
+    LotsJobs, EmailsJobs, LotsService, OrdersService, UsersService, BidsService, LotsGateway,
   ],
   exports: [BullModule],
 })

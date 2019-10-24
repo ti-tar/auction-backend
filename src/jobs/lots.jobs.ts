@@ -5,6 +5,7 @@ import { JOBS, EMAILS, QUEUE_NAMES } from './jobsList';
 import { LotsService } from '../lots/lots.service';
 import { OrdersService } from '../orders/orders.service';
 import { UsersService } from '../users/users.service';
+import { BidsService } from '../bids/bids.service';
 
 @Processor({ name: QUEUE_NAMES.LOTS })
 export class LotsJobs {
@@ -13,6 +14,7 @@ export class LotsJobs {
     private readonly lotsService: LotsService,
     private readonly ordersService: OrdersService,
     private readonly usersService: UsersService,
+    private readonly bidsService: BidsService,
     @InjectQueue(QUEUE_NAMES.EMAILS) private readonly emailsQueue: Queue,
   ) {}
 
@@ -31,7 +33,6 @@ export class LotsJobs {
       const bidWinnerId = lot.bids[lot.bids.length - 1].user.id;
       const buyer = await this.usersService.findOne(bidWinnerId);
       await this.emailsQueue.add(EMAILS.EMAIL_LOT_END_TIME_BUYER, { buyer, owner, lot }, { attempts: 5 });
-      await this.ordersService.create();
     }
 
     return this.loggerService.log(`--- Job ${job.name} processed`);

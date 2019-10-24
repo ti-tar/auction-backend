@@ -23,11 +23,13 @@ import { LotSerializerInterceptor } from './serializers/lot.interceptor';
 import { BidsSerializerInterceptor } from '../bids/serializers/bids.interceptor';
 import { BidSerializerInterceptor } from '../bids/serializers/bid.interceptor';
 import { ImageUploadSerializerInterceptor } from '../images/serializers/image-upload.interceptor';
-import { UserDecorator, UserDecoratorInterface } from '../users/user.decorator';
-import { LotEditValidationPipe } from '../pipes/lot-edit-validation-pipe.service';
+import { UserDecorator, IUserDecorator } from '../users/user.decorator';
+import { LotEditValidationPipe } from '../pipes/lot-edit.validation.pipe';
 import { ConfigService } from '../shared/config.service';
 import { Pagination } from '../shared/pagination';
 import { ImagesService } from '../images/images.service';
+import { OrdersService } from '../orders/orders.service';
+import { OrderDto } from '../orders/dto/order.dto';
 
 @Controller('lots')
 export class LotsController {
@@ -37,6 +39,7 @@ export class LotsController {
     private readonly loggerService: LoggerService,
     private readonly configService: ConfigService,
     private readonly imagesService: ImagesService,
+    private readonly ordersService: OrdersService,
   ) {}
 
   /*
@@ -75,7 +78,7 @@ export class LotsController {
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
   @Get('own/bids')
-  async getAllLotsByBidUserId(@UserDecorator() user: UserDecoratorInterface, @Request() request): Promise<Pagination<Lot>> {
+  async getAllLotsByBidUserId(@UserDecorator() user: IUserDecorator, @Request() request): Promise<Pagination<Lot>> {
     return this.lotsService.findAndCountLotsByBidUserId(user.id, {
       page: request.query.page || this.configService.config.pagination.page,
     });
@@ -116,6 +119,27 @@ export class LotsController {
   async setLot(@Param('lotId', new ParseIntPipe()) lotId: number, @UserDecorator() user): Promise<Lot> {
     return await this.lotsService.setLotToAuction(lotId, user);
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':lotId/order')
+  async createOrder(
+    @Param('lotId', new ParseIntPipe()) lotId: number,
+    @Request() orderDto: OrderDto,
+    @UserDecorator() user,
+  ): Promise<Lot> {
+    return await this.ordersService.create(lotId, orderDto, user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':lotId/order')
+  async updateOrder(
+    @Param('lotId', new ParseIntPipe()) lotId: number,
+    @Request() orderDto: OrderDto,
+    @UserDecorator() user,
+  ): Promise<Lot> {
+    return await this.ordersService.update(lotId, orderDto, user);
+  }
+
 
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotSerializerInterceptor)

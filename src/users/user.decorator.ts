@@ -7,7 +7,7 @@ export const UserDecorator = createParamDecorator((data, req) => {
   return req.user;
 });
 
-export interface UserDecoratorInterface {
+export interface IUserDecorator {
   lots: null;
   firstName: string;
   lastName: string;

@@ -25,6 +25,10 @@ export class BidsService {
     private readonly loggerService: LoggerService,
   ) {}
 
+  async findOne(bidId: number): Promise<Bid> {
+    return await this.bidsRepository.findOne(bidId);
+  }
+
   async findAllBidsByLotId(lotId: number): Promise<[Bid[], number]> {
     return await this.bidsRepository.findAndCount({
       where: {lot: { id: lotId }},
@@ -53,7 +57,7 @@ export class BidsService {
       throw new BadRequestException('Bid should be higher current price.');
     }
 
-    const savedBid = await this.bidsRepository.save({
+    const savedBid: Bid = await this.bidsRepository.save({
       proposedPrice: bidData.proposedPrice,
       bidCreationTime: new Date(),
       user,
@@ -68,20 +72,9 @@ export class BidsService {
     });
 
     if ( bidData.proposedPrice >= lot.estimatedPrice ) {
-
       this.loggerService.log('Bid is over lot\'s estimated price');
-      lot.status = 'closed';
-      await this.lotsRepository.save(lot);
+      await this.lotsRepository.update(lot.id, { status: 'closed' });
       this.loggerService.log('Lot updated, status = closed');
-
-      await this.ordersService.create();
-      this.loggerService.log('Order created');
-
-      await this.queue.add(EMAILS.EMAIL_BUY_IT_NOW_BETTING_USER, { owner: lot.user, buyer: user, lot }, { attempts: 5 });
-      await this.queue.add(EMAILS.EMAIL_BUY_IT_NOW_LOT_OWNER, { owner: lot.user, buyer: user, lot }, { attempts: 5 });
-
-      // web sockets notifications
-      // todo this.lotsGateway.buyItNow({})
     }
 
     return savedBid;

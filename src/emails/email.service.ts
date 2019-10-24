@@ -53,8 +53,8 @@ export class EmailService {
     return this.sendEmail( {
       to: userBidOwner.email,
       subject: `You ve bidded over estimated price on lot ${lot.title}`,
-      text: `Congratulations. You ve bidded over estimated price on lot ${lot.title}`,
-      html: `<h1>Congratulations!</h1><p>You ve bidded over estimated price on lot ${lot.title}</p>`
+      text: `Congratulations. You ve bidded over estimated price on lot '${lot.title}'`,
+      html: `<h1>Congratulations!</h1><p>You ve bidded over estimated price on lot '${lot.title}'</p>`
       + `<p>We'll send you a mail with next step when lot's owner allow the deal.</p>`
       + `<p>You'll see delivery details on <a>lots page</a></p>`,
     });
@@ -72,11 +72,12 @@ export class EmailService {
   }
 
   async sendLotEndTimeToBuyer(owner, buyer, lot): Promise<SentMessageInfo> {
+    const url = `${this.configService.config.frontendUrl}/lots/${lot.id}`;
     return this.sendEmail( {
       to: buyer.email,
       subject: `Lot '${lot.title}' end time has passed.`,
-      text: `Lot '${lot.title}' end time has passed.` ,
-      html: `<h1>H1</h1><p>Lot '${lot.title}' end time has passed.</p><p>You are the winner. Congratulations.</p>`,
+      text: `Lot '${lot.title}' end time has passed. Url ${url}` ,
+      html: `<h1>H1</h1><p>Lot <a href="${url}">'${lot.title}'</a> end time has passed.</p><p>You are the winner.</p>`,
     });
   }
 

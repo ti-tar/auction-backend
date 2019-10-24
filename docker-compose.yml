@@ -1,6 +1,7 @@
 version: '3.1'
 services:
   db:
+    container_name: auction-db
     image: postgres:10-alpine
     ports:
       - 5432:5432
@@ -9,6 +10,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: auction
   test_db:
+    container_name: auction-test-db
     image: postgres:10-alpine
     ports:
       - 5433:5432
@@ -17,6 +19,7 @@ services:
       POSTGRES_PASSWORD: password_test
       POSTGRES_DB: auction_test
   admin:
+    container_name: auction-adminer
     image: adminer
     restart: always
     depends_on:
