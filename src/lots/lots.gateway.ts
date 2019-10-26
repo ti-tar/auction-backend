@@ -10,7 +10,6 @@ import { Server, Socket } from 'socket.io';
 import * as moment from 'moment';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../shared/logger.service';
-import { JwtService } from '@nestjs/jwt';
 
 interface WebsocketResponseInterface {
   message: string;

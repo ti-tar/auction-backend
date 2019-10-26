@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
 import { User } from './user';
 import { Lot } from './lot';
+import { Order } from './order';
 
 @Entity('bids')
 export class Bid {
@@ -18,4 +19,8 @@ export class Bid {
 
   @ManyToOne(type => Lot, lot => lot.bids)
   lot: Lot;
+
+  @OneToOne(type => Order)
+  @JoinColumn()
+  order: Order;
 }

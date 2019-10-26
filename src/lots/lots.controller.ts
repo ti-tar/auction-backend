@@ -30,6 +30,7 @@ import { Pagination } from '../shared/pagination';
 import { ImagesService } from '../images/images.service';
 import { OrdersService } from '../orders/orders.service';
 import { OrderDto } from '../orders/dto/order.dto';
+import { Order } from '../entities/order';
 
 @Controller('lots')
 export class LotsController {
@@ -124,9 +125,9 @@ export class LotsController {
   @Post(':lotId/order')
   async createOrder(
     @Param('lotId', new ParseIntPipe()) lotId: number,
-    @Request() orderDto: OrderDto,
+    @Body() orderDto: OrderDto,
     @UserDecorator() user,
-  ): Promise<Lot> {
+  ): Promise<Order> {
     return await this.ordersService.create(lotId, orderDto, user);
   }
 
@@ -139,7 +140,6 @@ export class LotsController {
   ): Promise<Lot> {
     return await this.ordersService.update(lotId, orderDto, user);
   }
-
 
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotSerializerInterceptor)

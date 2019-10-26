@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { OrdersModule } from './orders/orders.module';
 import { ImagesModule } from './images/images.module';
 import { JobsModule } from './jobs/jobs.module';
+import { BidsModule } from './bids/bids.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { JobsModule } from './jobs/jobs.module';
     OrdersModule,
     ImagesModule,
     JobsModule,
+    BidsModule,
   ],
 })
 

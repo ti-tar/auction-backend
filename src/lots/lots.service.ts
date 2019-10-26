@@ -57,7 +57,7 @@ export class LotsService {
   }
 
   async findOne(id: number): Promise<Lot> {
-    return this.lotsRepository.findOne(id, { relations: ['user', 'bids'] });
+    return this.lotsRepository.findOne(id, { relations: ['user', 'bids', 'bids.order'] });
   }
 
   async delete(lotId: number): Promise<DeleteResult> {

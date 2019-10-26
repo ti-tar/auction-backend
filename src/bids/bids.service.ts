@@ -11,7 +11,7 @@ import { OrdersService } from '../orders/orders.service';
 import { EmailService } from '../emails/email.service';
 import { LoggerService } from '../shared/logger.service';
 import { InjectQueue } from 'nest-bull';
-import { EMAILS, QUEUE_NAMES } from '../jobs/jobsList';
+import { QUEUE_NAMES } from '../jobs/jobsList';
 
 @Injectable()
 export class BidsService {
@@ -26,7 +26,7 @@ export class BidsService {
   ) {}
 
   async findOne(bidId: number): Promise<Bid> {
-    return await this.bidsRepository.findOne(bidId);
+    return await this.bidsRepository.findOne(bidId, { relations: ['user', 'order'] });
   }
 
   async findAllBidsByLotId(lotId: number): Promise<[Bid[], number]> {
