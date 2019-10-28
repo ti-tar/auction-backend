@@ -145,6 +145,16 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(OrderSerializerInterceptor)
+  @Post(':lotId/executeOrder')
+  async executeOrder(
+    @Param('lotId', new ParseIntPipe()) lotId: number,
+    @UserDecorator() user,
+  ): Promise<Lot> {
+    return await this.ordersService.executeOrder(lotId, user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotSerializerInterceptor)
   @Put(':lotId')
   async update(

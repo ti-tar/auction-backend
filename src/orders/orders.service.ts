@@ -9,6 +9,7 @@ import { LotsService } from '../lots/lots.service';
 import { ModuleRef } from '@nestjs/core';
 import { BidsService } from '../bids/bids.service';
 import { getWinnersBid } from '../libs/helpers';
+import { Lot } from '../entities/lot';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -49,7 +50,7 @@ export class OrdersService implements OnModuleInit {
   async update(lotId: number, orderDto: OrderDto, user: User): Promise<Order> {
     const lot = await this.lotsService.findOne(lotId);
 
-    if (lot.status !== 'closed' || !lot.bids.length) {
+    if (lot.status !== 'closed' || !lot.bids.length || getWinnersBid(lot.bids).user.id !== user.id) {
       throw new BadRequestException('Error! Bad lot format');
     }
 
@@ -57,11 +58,36 @@ export class OrdersService implements OnModuleInit {
     if (!order) {
       throw new BadRequestException('Error! Bad lot format');
     }
+
     await this.ordersRepository.update(order.id, {
       arrivalLocation: orderDto.arrivalLocation,
       type: orderDto.type,
     });
     return await this.ordersRepository.findOne(order.id);
+  }
+
+  async executeOrder(lotId: number, user: User): Promise<Lot> {
+    const lot = await this.lotsService.findOne(lotId);
+
+    // if user is owner lot
+    if (!lot || lot.user.id !== user.id) {
+      throw new BadRequestException('You are not the owner!');
+    }
+
+    // if order does not exist
+    const winnersBid = getWinnersBid(lot.bids || []);
+    if (!winnersBid || winnersBid.order || winnersBid.order.id ) {
+      throw new BadRequestException('Lots has no order yet!');
+    }
+
+    // if order does not have status pending
+    if (winnersBid.order.status !== 'pending') {
+      throw new BadRequestException('Order does not have pending status. Maybe, Lot already sent');
+    }
+
+    await this.ordersRepository.update(winnersBid.order.id, { status: 'sent'});
+
+    return await this.lotsService.findOne(lotId);
   }
 
   async findOne(orderId): Promise < Order > {
