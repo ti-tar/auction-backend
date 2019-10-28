@@ -31,6 +31,7 @@ import { ImagesService } from '../images/images.service';
 import { OrdersService } from '../orders/orders.service';
 import { OrderDto } from '../orders/dto/order.dto';
 import { Order } from '../entities/order';
+import { OrderSerializerInterceptor } from '../orders/serializers/order.interceptor';
 
 @Controller('lots')
 export class LotsController {
@@ -122,6 +123,7 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(OrderSerializerInterceptor)
   @Post(':lotId/order')
   async createOrder(
     @Param('lotId', new ParseIntPipe()) lotId: number,
@@ -132,12 +134,13 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post(':lotId/order')
+  @UseInterceptors(OrderSerializerInterceptor)
+  @Put(':lotId/order')
   async updateOrder(
     @Param('lotId', new ParseIntPipe()) lotId: number,
-    @Request() orderDto: OrderDto,
+    @Body() orderDto: OrderDto,
     @UserDecorator() user,
-  ): Promise<Lot> {
+  ): Promise<Order> {
     return await this.ordersService.update(lotId, orderDto, user);
   }
 

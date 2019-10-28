@@ -79,4 +79,8 @@ export class BidsService {
 
     return savedBid;
   }
+
+  async update(id, updatedData) {
+    return await this.bidsRepository.update(id, updatedData);
+  }
 }

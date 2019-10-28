@@ -8,6 +8,7 @@ import { User } from '../entities/user';
 import { LotsService } from '../lots/lots.service';
 import { ModuleRef } from '@nestjs/core';
 import { BidsService } from '../bids/bids.service';
+import { getWinnersBid } from '../libs/helpers';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -28,33 +29,39 @@ export class OrdersService implements OnModuleInit {
     const lot = await this.lotsService.findOne(lotId);
 
     // check if winner
-    if (lot.status !== 'closed' || !lot.bids.length ) {
+    if (lot.status !== 'closed' || !lot.bids.length || getWinnersBid(lot.bids).user.id !== user.id ) {
       throw new BadRequestException('You are not winner of lot');
     }
 
-    const winnerBid = await this.bidsService.findOne(lot.bids[lot.bids.length - 1].id);
+    const winnersBid = getWinnersBid(lot.bids);
 
-    if (!winnerBid || winnerBid.user.id !== user.id ) {
-      throw new BadRequestException('You are not winner of lot');
-    }
+    const newOrder = await this.ordersRepository.save({
+      arrivalLocation: orderDto.arrivalLocation,
+      type: orderDto.type,
+      status: 'pending',
+      bid: winnersBid,
+    });
 
-    const newOrder = new Order();
-    newOrder.arrivalLocation = orderDto.arrivalLocation;
-    newOrder.type = orderDto.type;
-    newOrder.status = 'pending';
-    newOrder.bid = winnerBid;
-
-    return await this.ordersRepository.save(newOrder);
+    await this.bidsService.update(winnersBid.id, { order: newOrder });
+    return newOrder;
   }
 
-  async update(lotId: number, orderDto: OrderDto, user: User): Promise<any> {
+  async update(lotId: number, orderDto: OrderDto, user: User): Promise<Order> {
+    const lot = await this.lotsService.findOne(lotId);
 
-    // const newOrder = new Order();
-    // newOrder.arrivalLocation = 'pending';
-    // newOrder.type = 'pending';
-    // newOrder.status = 'pending';
-    // newOrder.bid = bid;
-    return ''; // 'this.ordersRepository.save(newOrder)';
+    if (lot.status !== 'closed' || !lot.bids.length) {
+      throw new BadRequestException('Error! Bad lot format');
+    }
+
+    const order = getWinnersBid(lot.bids).order;
+    if (!order) {
+      throw new BadRequestException('Error! Bad lot format');
+    }
+    await this.ordersRepository.update(order.id, {
+      arrivalLocation: orderDto.arrivalLocation,
+      type: orderDto.type,
+    });
+    return await this.ordersRepository.findOne(order.id);
   }
 
   async findOne(orderId): Promise < Order > {

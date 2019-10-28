@@ -28,7 +28,7 @@ export class Order {
   @Column({type: 'enum', enum: Status})
   status: string;
 
-  @OneToOne(type => Bid)
+  @OneToOne(type => Bid, bid => bid.order)
   @JoinColumn()
   bid: Bid;
 }

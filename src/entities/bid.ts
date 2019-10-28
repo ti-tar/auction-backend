@@ -20,7 +20,7 @@ export class Bid {
   @ManyToOne(type => Lot, lot => lot.bids)
   lot: Lot;
 
-  @OneToOne(type => Order)
+  @OneToOne(type => Order, order => order.bid)
   @JoinColumn()
   order: Order;
 }
