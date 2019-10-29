@@ -145,13 +145,23 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(OrderSerializerInterceptor)
+  @UseInterceptors(LotSerializerInterceptor)
   @Post(':lotId/executeOrder')
   async executeOrder(
     @Param('lotId', new ParseIntPipe()) lotId: number,
     @UserDecorator() user,
   ): Promise<Lot> {
     return await this.ordersService.executeOrder(lotId, user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotSerializerInterceptor)
+  @Post(':lotId/receiveOrder')
+  async receiveOrder(
+    @Param('lotId', new ParseIntPipe()) lotId: number,
+    @UserDecorator() user,
+  ): Promise<Lot> {
+    return await this.ordersService.receiveOrder(lotId, user);
   }
 
   @UseGuards(AuthGuard('jwt'))

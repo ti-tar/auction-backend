@@ -76,7 +76,7 @@ export class OrdersService implements OnModuleInit {
 
     // if order does not exist
     const winnersBid = getWinnersBid(lot.bids || []);
-    if (!winnersBid || winnersBid.order || winnersBid.order.id ) {
+    if (!winnersBid || !winnersBid.order || !winnersBid.order.id ) {
       throw new BadRequestException('Lots has no order yet!');
     }
 
@@ -86,6 +86,37 @@ export class OrdersService implements OnModuleInit {
     }
 
     await this.ordersRepository.update(winnersBid.order.id, { status: 'sent'});
+
+    return await this.lotsService.findOne(lotId);
+  }
+
+  async receiveOrder(lotId: number, user: User): Promise<Lot> {
+    const lot = await this.lotsService.findOne(lotId);
+
+    // if user is owner lot
+    if (!lot) {
+      throw new BadRequestException('Not such lot!');
+    }
+
+    // lot.user.id !== user.id
+
+    // if order does not exist
+    const winnersBid = getWinnersBid(lot.bids || []);
+
+    if (!winnersBid || winnersBid.user.id !== user.id) {
+      throw new BadRequestException('You are not the owner!');
+    }
+
+    if (!winnersBid || !winnersBid.order || !winnersBid.order.id) {
+      throw new BadRequestException('Lots has no order yet!');
+    }
+
+    // if order does not have status pending
+    if (winnersBid.order.status !== 'sent') {
+      throw new BadRequestException('Order has not been sent');
+    }
+
+    await this.ordersRepository.update(winnersBid.order.id, { status: 'delivered'});
 
     return await this.lotsService.findOne(lotId);
   }
