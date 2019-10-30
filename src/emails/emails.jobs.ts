@@ -11,6 +11,27 @@ export class EmailsJobs {
     private readonly emailService: EmailService,
   ) {}
 
+  @Process({ name: EMAILS.SEND_VERIFICATION_EMAIL })
+  async sendVerificationEmail(job) {
+    const { user } = job.data;
+    const sentMail = await this.emailService.sendVerificationEmail(user);
+    return `Email sent to ${sentMail.envelope.to.join(', ')}`;
+  }
+
+  @Process({ name: EMAILS.SEND_APPROVAL_EMAIL })
+  async sendApprovalEmail(job) {
+    const { user } = job.data;
+    const sentMail = await this.emailService.sendApprovalEmail(user);
+    return `Email sent to ${sentMail.envelope.to.join(', ')}`;
+  }
+
+  @Process({ name: EMAILS.SEND_FORGOT_PASSWORD_MAIL })
+  async sendForgotPasswordMail(job) {
+    const { user } = job.data;
+    const sentMail = await this.emailService.sendForgotPasswordMail(user);
+    return `Email sent to ${sentMail.envelope.to.join(', ')}`;
+  }
+
   @Process({ name: EMAILS.EMAIL_BUY_IT_NOW_BETTING_USER })
   async buyItNowToBuyer(job) {
     const { buyer, owner, lot } = job.data;

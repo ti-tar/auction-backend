@@ -11,6 +11,7 @@ import { LocalStrategy } from './local.strategy';
 import { ConfigService } from '../shared/config.service';
 import { JwtModule } from '@nestjs/jwt';
 import { SharedModule } from '../shared/shared.module';
+import { JobsModule } from '../jobs/jobs.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SharedModule } from '../shared/shared.module';
     UsersModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     TypeOrmModule.forFeature([User]),
+    JobsModule,
   ],
   providers: [
     UsersService, AuthService,

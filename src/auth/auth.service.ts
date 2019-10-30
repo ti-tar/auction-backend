@@ -5,11 +5,13 @@ import { UsersService } from '../users/users.service';
 import { ConfigService } from '../shared/config.service';
 import { LoginSerializerInterceptor } from './serializers/login.interceptor';
 import { LoggerService } from '../shared/logger.service';
-import { EmailService } from '../emails/email.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import { InjectQueue } from 'nest-bull';
+import { EMAILS, QUEUE_NAMES } from '../jobs/jobsList';
+import { Queue } from 'bull';
 
 @Injectable()
 export class AuthService {
@@ -17,8 +19,8 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly configService: ConfigService,
     private readonly loggerService: LoggerService,
-    private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
+    @InjectQueue(QUEUE_NAMES.EMAILS) private readonly emailsQueue: Queue,
   ) {}
 
   @UseInterceptors(LoginSerializerInterceptor)
@@ -53,8 +55,8 @@ export class AuthService {
       await this.userService.save(newUser);
       this.loggerService.log(`User Signed Up. User '${newUser.firstName}', id: ${newUser.id}, email: ${newUser.email},  status: ${newUser.status}`);
 
-      const sentMail = await this.emailService.sendVerificationEmail(newUser);
-      this.loggerService.log(`User Signed Up. Verification email sent to ${sentMail.envelope.to.join(', ')}`);
+      await this.emailsQueue.add(EMAILS.SEND_VERIFICATION_EMAIL, { user: newUser }, { attempts: 5 });
+      this.loggerService.log(`User Signed Up. Verification email added to email queue.`);
 
       return newUser;
 
@@ -74,11 +76,12 @@ export class AuthService {
     try {
       user.status = 'approved';
       user.token = null;
+
       await this.userService.update(user);
       this.loggerService.log(`Email verified. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
 
-      const sentMail = await this.emailService.sendApprovalEmail(user);
-      this.loggerService.log(`Email verified. Success letter sent to ${sentMail.envelope.to.join(', ')}`);
+      await this.emailsQueue.add(EMAILS.SEND_APPROVAL_EMAIL, { user }, { attempts: 5 });
+      this.loggerService.log(`Verify email added to email queue jobs.`);
 
       return user;
     } catch ( errors ) {
@@ -100,11 +103,14 @@ export class AuthService {
     }
 
     user.token = ConfigService.generateRandomToken();
-    await this.userService.update(user);
-    this.loggerService.log(`Forgot password. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
+
     try {
-      const sentMail = await this.emailService.sendForgotPasswordMail(user);
-      this.loggerService.log(`Forgot password. Email sent to ${sentMail.envelope.to.join(', ')}`);
+      await this.userService.update(user);
+      this.loggerService.log(`Forgot password. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
+
+      await this.emailsQueue.add(EMAILS.SEND_FORGOT_PASSWORD_MAIL, { user }, { attempts: 5 });
+      this.loggerService.log(`Forgot password. Email added to email queue`);
+
       return user;
     } catch (error) {
       this.loggerService.error(error);

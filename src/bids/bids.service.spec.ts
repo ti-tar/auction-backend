@@ -9,7 +9,7 @@ import { getMockedBidByField, mockedBids } from '../mockedData/bids';
 import { Repository } from 'typeorm';
 import { getMockedLotByField } from '../mockedData/lots';
 import { getMockedUserByField } from '../mockedData/users';
-import { EmailService } from '../email/email.service';
+import { EmailService } from '../emails/email.service';
 
 describe('Bids Service', () => {
   let testingModule: TestingModule;
