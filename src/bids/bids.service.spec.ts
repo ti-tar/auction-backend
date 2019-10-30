@@ -10,26 +10,54 @@ import { Repository } from 'typeorm';
 import { getMockedLotByField } from '../mockedData/lots';
 import { getMockedUserByField } from '../mockedData/users';
 import { EmailService } from '../emails/email.service';
+import { BullModule } from 'nest-bull';
+import { QUEUE_NAMES } from '../jobs/jobsList';
+import { Lot, LotStatus } from '../entities/lot';
+import { Queue } from 'bull';
+import { LoggerService } from '../shared/logger.service';
+import MockedLoggerService from '../../test/services/mockedLogger.service';
+
+function getQueueToken(name?: string): string {
+  return name ? `BullQueue_${name}` : 'BullQueue_default';
+}
 
 describe('Bids Service', () => {
   let testingModule: TestingModule;
   let bidsService: BidsService;
-  let ordersService: OrdersService;
+  let lotsGateway: LotsGateway;
   let bidsRepository: Repository<Bid>;
+  let lotsRepository: Repository<Lot>;
+  let emailsQueue: Queue;
 
   let mockedLot;
   let mockedUser;
   let mockedBid;
 
+  let mockedProcessor;
+
   beforeEach(async () => {
+    mockedProcessor = jest.fn(() => ({}));
     testingModule = await Test.createTestingModule({
-      imports: [      ],
+      imports: [
+        BullModule.registerAsync(
+          {
+            name: QUEUE_NAMES.EMAILS,
+            useFactory: mockedProcessor,
+          },
+        ),
+      ],
       providers: [BidsService,
         {
           provide: getRepositoryToken(Bid),
           useFactory: jest.fn(() => ({
             findAndCount: jest.fn(() => [ mockedBids, mockedBids.length]),
             save: jest.fn(() => mockedBid),
+          })),
+        },
+        {
+          provide: getRepositoryToken(Lot),
+          useFactory: jest.fn(() => ({
+            update: jest.fn(() => ('')),
           })),
         },
         {
@@ -45,6 +73,10 @@ describe('Bids Service', () => {
           })),
         },
         {
+          provide: LoggerService,
+          useClass: MockedLoggerService(),
+        },
+        {
           provide: EmailService,
           useFactory: jest.fn(() => ({
           })),
@@ -54,7 +86,9 @@ describe('Bids Service', () => {
 
     bidsService = testingModule.get<BidsService>(BidsService);
     bidsRepository = testingModule.get(getRepositoryToken(Bid));
-    ordersService = testingModule.get(OrdersService);
+    lotsRepository = testingModule.get(getRepositoryToken(Lot));
+    lotsGateway = testingModule.get<LotsGateway>(LotsGateway);
+    emailsQueue = testingModule.get<Queue>(getQueueToken(QUEUE_NAMES.EMAILS));
 
     mockedLot = getMockedLotByField({id: 135, status: 'inProcess' });
     mockedUser = getMockedUserByField({id: 1});
@@ -77,18 +111,18 @@ describe('Bids Service', () => {
   });
 
   it('addBid. Wrong lot status', async () => {
-    mockedLot = getMockedLotByField({status: 'pending'});
+    mockedLot = getMockedLotByField({status: LotStatus.pending});
     await expect(bidsService.addBid(mockedBid, mockedUser, mockedLot))
       .rejects.toThrowError(`You can bid only lots with status 'inProcess'.`);
   });
 
-  it('addBid. bid your own lot', async () => {
+  it('addBid. Bid your own lot', async () => {
     mockedUser = getMockedUserByField(mockedLot.user.id);
     await expect(bidsService.addBid(mockedBid, mockedUser, mockedLot))
       .rejects.toThrowError('You can\'t bid to your own lots');
   });
 
-  it('addBid. price should be greater than current', async () => {
+  it('addBid. Price should be greater than current', async () => {
     mockedBid.proposedPrice = mockedLot.currentPrice;
     await expect(bidsService.addBid(mockedBid, mockedUser, mockedLot))
       .rejects.toThrowError('Bid should be higher current price.');
@@ -98,7 +132,8 @@ describe('Bids Service', () => {
     mockedBid.proposedPrice = mockedLot.estimatedPrice + 1;
     expect(await bidsService.addBid(mockedBid, mockedUser, mockedLot))
       .toEqual(expect.objectContaining({ proposedPrice: mockedBid.proposedPrice}));
-    expect(ordersService.create).toHaveBeenCalled();
+    expect(lotsGateway.bidsUpdate).toHaveBeenCalledTimes(1);
+    expect(lotsRepository.update).toHaveBeenCalledTimes(1);
   });
 
 });

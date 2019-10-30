@@ -2,16 +2,16 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Queue } from 'bull';
-import { Lot } from '../entities/lot';
+import { Lot, LotStatus } from '../entities/lot';
 import { Bid } from '../entities/bid';
 import { CreateBidDto } from './dto/create-bid.dto';
 import { User } from '../entities/user';
 import { LotsGateway } from '../lots/lots.gateway';
 import { OrdersService } from '../orders/orders.service';
-import { EmailService } from '../emails/email.service';
 import { LoggerService } from '../shared/logger.service';
 import { InjectQueue } from 'nest-bull';
 import { QUEUE_NAMES } from '../jobs/jobsList';
+import { getWinnersBid } from '../libs/helpers';
 
 @Injectable()
 export class BidsService {
@@ -21,7 +21,6 @@ export class BidsService {
     @InjectQueue(QUEUE_NAMES.EMAILS) private readonly queue: Queue,
     private readonly lotsGateway: LotsGateway,
     private readonly ordersService: OrdersService,
-    private readonly emailService: EmailService,
     private readonly loggerService: LoggerService,
   ) {}
 
@@ -41,7 +40,7 @@ export class BidsService {
       throw new BadRequestException('Lot info error');
     }
 
-    if (lot.status !== 'inProcess') {
+    if (lot.status !== LotStatus.inProcess ) {
       throw new BadRequestException(`You can bid only lots with status 'inProcess'.`);
     }
 
@@ -49,7 +48,7 @@ export class BidsService {
       throw new BadRequestException('You can\'t bid to your own lots');
     }
 
-    if (lot.bids && lot.bids.length && bidData.proposedPrice <= lot.bids[lot.bids.length - 1].proposedPrice) {
+    if (lot.bids && lot.bids.length && bidData.proposedPrice <= getWinnersBid(lot.bids).proposedPrice) {
       throw new BadRequestException('Bid should be higher last proposed bid.');
     }
 
@@ -73,7 +72,7 @@ export class BidsService {
 
     if ( bidData.proposedPrice >= lot.estimatedPrice ) {
       this.loggerService.log('Bid is over lot\'s estimated price');
-      await this.lotsRepository.update(lot.id, { status: 'closed' });
+      await this.lotsRepository.update(lot.id, { status: LotStatus.closed });
       this.loggerService.log('Lot updated, status = closed');
     }
 

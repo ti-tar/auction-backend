@@ -1,12 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
-// import { Transform } from 'class-transformer';
 
 import { User } from './user';
 import { Bid } from './bid';
 
-// const moment = require("moment");
-
-export enum Status {
+export enum LotStatus {
   pending = 'pending',
   inProcess = 'inProcess',
   closed = 'closed',
@@ -27,7 +24,7 @@ export class Lot {
   @Column({ name: 'description', type: 'text', nullable: true})
   description?: string;
 
-  @Column({ name: 'status', type: 'enum', enum: Status, default: 'pending'})
+  @Column({ name: 'status', type: 'enum', enum: LotStatus, default: LotStatus.pending})
   status?: string;
 
   @Column({ name: 'current_price', type: 'float'})
@@ -36,11 +33,9 @@ export class Lot {
   @Column({ name: 'estimated_price', type: 'float'})
   estimatedPrice: number;
 
-  // @Transform((startTime:string): Date => moment(startTime))
   @Column({ name: 'start_time', type: 'timestamp'})
   startTime: Date;
 
-  // @Transform((endTime:string): Date => moment(endTime))
   @Column({ name: 'end_time', type: 'timestamp'})
   endTime: Date;
 
