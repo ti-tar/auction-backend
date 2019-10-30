@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, UseInterceptors } from '@nestjs/common';
-import { User } from '../entities/user';
+import { User, UserStatus } from '../entities/user';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../shared/config.service';
@@ -45,14 +45,12 @@ export class AuthService {
     }
 
     try {
-      const newUser = new User();
-      newUser.firstName = createUserDto.firstName;
-      newUser.lastName = createUserDto.lastName;
-      newUser.email = createUserDto.email;
-      newUser.phone = createUserDto.phone;
-      newUser.password = createUserDto.password;
-
-      await this.userService.save(newUser);
+      const newUser = await this.userService.save({
+        ...createUserDto,
+        password: ConfigService.getPasswordsHash(createUserDto.password),
+        token: ConfigService.generateRandomToken(), // token for email verification
+        status: UserStatus.pending,
+      });
       this.loggerService.log(`User Signed Up. User '${newUser.firstName}', id: ${newUser.id}, email: ${newUser.email},  status: ${newUser.status}`);
 
       await this.emailsQueue.add(EMAILS.SEND_VERIFICATION_EMAIL, { user: newUser }, { attempts: 5 });
@@ -74,16 +72,14 @@ export class AuthService {
     }
 
     try {
-      user.status = 'approved';
-      user.token = null;
+      const updUser = { ...user, status: UserStatus.approved, token: null };
+      await this.userService.update(updUser);
+      this.loggerService.log(`Email verified. User '${updUser.firstName}', id: ${updUser.id}, email: ${updUser.email}.`);
 
-      await this.userService.update(user);
-      this.loggerService.log(`Email verified. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
-
-      await this.emailsQueue.add(EMAILS.SEND_APPROVAL_EMAIL, { user }, { attempts: 5 });
+      await this.emailsQueue.add(EMAILS.SEND_APPROVAL_EMAIL, { user: updUser }, { attempts: 5 });
       this.loggerService.log(`Verify email added to email queue jobs.`);
 
-      return user;
+      return updUser;
     } catch ( errors ) {
       this.loggerService.error(errors);
       throw new BadRequestException('Error occurred while approving user!');
@@ -98,20 +94,17 @@ export class AuthService {
       throw new BadRequestException('No such email.');
     }
 
-    if (user.status === 'pending') {
+    if (user.status === UserStatus.pending) {
       throw new BadRequestException('You haven\'t been approved.');
     }
 
-    user.token = ConfigService.generateRandomToken();
-
     try {
-      await this.userService.update(user);
-      this.loggerService.log(`Forgot password. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
-
-      await this.emailsQueue.add(EMAILS.SEND_FORGOT_PASSWORD_MAIL, { user }, { attempts: 5 });
+      const updUser = {...user, token: ConfigService.generateRandomToken()};
+      await this.userService.update(updUser);
+      this.loggerService.log(`Forgot password. User '${updUser.firstName}', id: ${updUser.id}, email: ${updUser.email}, status: ${updUser.status}.`);
+      await this.emailsQueue.add(EMAILS.SEND_FORGOT_PASSWORD_MAIL, { user: updUser }, { attempts: 5 });
       this.loggerService.log(`Forgot password. Email added to email queue`);
-
-      return user;
+      return updUser;
     } catch (error) {
       this.loggerService.error(error);
       throw new BadRequestException('Error occurred while updating!');
@@ -130,17 +123,15 @@ export class AuthService {
       throw new BadRequestException('No user with such token.');
     }
 
-    if (user && user.status !== 'approved') {
+    if (user && user.status !== UserStatus.approved) {
       throw new BadRequestException('Your account was not been approved.');
     }
 
     try {
-      user.password = ConfigService.getPasswordsHash(password);
-      user.token = null;
-      await this.userService.update(user);
-      this.loggerService.log(`Reset password. User '${user.firstName}', id: ${user.id}, email: ${user.email}, status: ${user.status}.`);
-
-      return user;
+      const updUser = { ...user, password: ConfigService.getPasswordsHash(password), token: null};
+      await this.userService.update(updUser);
+      this.loggerService.log(`Reset password. User '${updUser.firstName}', id: ${updUser.id}, email: ${updUser.email}, status: ${updUser.status}.`);
+      return updUser;
     } catch (error) {
       this.loggerService.error(error);
       throw new BadRequestException('Error occurred during resetting password!');

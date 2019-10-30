@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { EmailService } from '../emails/email.service';
 import { LoggerService } from '../shared/logger.service';
 import MockedLoggerService from '../../test/services/mockedLogger.service';
 import { ConfigService } from '../shared/config.service';
@@ -11,14 +10,24 @@ import singingUpUser from '../mockedData/signup-user-request';
 import { JwtModule } from '@nestjs/jwt';
 import { SharedModule } from '../shared/shared.module';
 import { MockConfigService } from '../mockedData/mocked-config.service';
+import { BullModule } from 'nest-bull';
+import { Queue } from 'bull';
+import { QUEUE_NAMES } from '../jobs/jobsList';
+
+function getQueueToken(name?: string): string {
+  return name ? `BullQueue_${name}` : 'BullQueue_default';
+}
 
 describe('AuthService', () => {
   let module: TestingModule;
   let authService: AuthService;
   let userService: UsersService;
-  let emailService: EmailService;
+  let emailsQueue: Queue;
+
+  let mockedProcessor;
 
   beforeEach(async () => {
+    mockedProcessor = jest.fn(() => ({}));
     module = await Test.createTestingModule({
       imports: [
         JwtModule.registerAsync({
@@ -28,7 +37,12 @@ describe('AuthService', () => {
           imports: [SharedModule],
           inject: [ConfigService],
         }),
-      ],
+        BullModule.registerAsync(
+          {
+            name: QUEUE_NAMES.EMAILS,
+            useFactory: mockedProcessor,
+          },
+        )],
       providers: [
         AuthService,
         {
@@ -49,20 +63,12 @@ describe('AuthService', () => {
             save: jest.fn(user => user),
           })),
         },
-        {
-          provide: EmailService,
-          useFactory: jest.fn(() => ({
-            sendVerificationEmail: jest.fn(() => ({ envelope: { to: []}})),
-            sendApprovalEmail: jest.fn(() => ({ envelope: { to: []}})),
-            sendForgotPasswordMail: jest.fn(() => ({ envelope: { to: []}})),
-          })),
-        },
       ],
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
     userService = module.get<UsersService>(UsersService);
-    emailService = module.get<EmailService>(EmailService);
+    emailsQueue = module.get<Queue>(getQueueToken(QUEUE_NAMES.EMAILS));
   });
 
   afterAll(() => {
@@ -97,7 +103,7 @@ describe('AuthService', () => {
       .toEqual(expect.objectContaining({ email: singingUpUser.email }));
     expect(userService.findByEmail).toHaveBeenCalledWith(singingUpUser.email);
     expect(userService.save).toHaveBeenCalled();
-    expect(emailService.sendVerificationEmail).toHaveBeenCalled();
+    expect(mockedProcessor).toHaveBeenCalledTimes(1);
   });
 
   it('singUp. Email already exist in DB', async () => {
@@ -115,7 +121,6 @@ describe('AuthService', () => {
         status: 'approved',
         token: null,
     }));
-    // expect(emailService.sendApprovalEmail).toHaveBeenCalledWith(verifiedUser);
   });
 
   it('verifyEmail. Invalid token', async () => {
@@ -129,7 +134,7 @@ describe('AuthService', () => {
       .toEqual(expect.objectContaining({
         email: pendingStatusUser.email,
       }));
-    // expect(emailService.sendForgotPasswordMail).toHaveBeenCalled();
+    expect(mockedProcessor).toHaveBeenCalledTimes(1);
   });
 
   it('forgotPassword. No such email.', async () => {

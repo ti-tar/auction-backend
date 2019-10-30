@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { EmailService } from '../email/email.service';
+import { EmailService } from '../emails/email.service';
 import { ConfigService } from '../shared/config.service';
 import { UsersService } from '../users/users.service';
 import { LoggerService } from '../shared/logger.service';

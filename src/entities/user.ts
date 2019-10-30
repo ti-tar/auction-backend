@@ -1,17 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToMany, BeforeInsert } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToMany } from 'typeorm';
 import { IsEmail } from 'class-validator';
 import { Exclude } from 'class-transformer';
 import { Lot } from './lot';
 import { Bid } from './bid';
-import { ConfigService } from '../shared/config.service';
 
-export enum Status {
+export enum UserStatus {
   pending = 'pending',
   approved = 'approved',
 }
 
 @Entity('users')
-@Unique(['email', 'phone'])
+@Unique(['email'])
 export class User {
 
   @PrimaryGeneratedColumn()
@@ -34,17 +33,11 @@ export class User {
   @Column({ name: 'last_name', type: 'varchar', length: 255 })
   lastName: string;
 
-  @Column({ name: 'status', type: 'enum', enum: Status, default: 'pending'})
+  @Column({ name: 'status', type: 'enum', enum: UserStatus, default: UserStatus.pending})
   status?: string;
 
   @Column({ name: 'token', type: 'varchar', length: 255, nullable: true })
   token: string;
-
-  @BeforeInsert()
-  beforeInsert() {
-    this.password = ConfigService.getPasswordsHash(this.password);
-    this.token = ConfigService.generateRandomToken();
-  }
 
   @OneToMany(type => Lot, lot => lot.user)
   lots: Lot[];
