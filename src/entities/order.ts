@@ -8,7 +8,7 @@ export enum TypeStatus {
   dhlExpress = 'DHL Express',
 }
 
-export enum Status {
+export enum OrderStatus {
   pending = 'pending',
   sent = 'sent',
   delivered = 'delivered',
@@ -25,7 +25,7 @@ export class Order {
   @Column({type: 'enum', enum: TypeStatus})
   type: string;
 
-  @Column({type: 'enum', enum: Status})
+  @Column({type: 'enum', enum: OrderStatus})
   status: string;
 
   @OneToOne(type => Bid, bid => bid.order)

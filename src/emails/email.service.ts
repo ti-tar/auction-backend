@@ -44,61 +44,94 @@ export class EmailService {
     return this.sendEmail( {
       to: user.email,
       subject: 'Email to reset password.',
-      text: 'Hi! Reset pass on auction site. Your link: ' + `${resetPassLink}`,
-      html: `<h1>Hi!</h1><p>Reset pass on auction site.</p><p><a href="${resetPassLink}">Reset email.</a></p>`,
+      text: `Hello, ${user.firstName}! Reset pass on auction site. Your link: ` + `${resetPassLink}`,
+      html: `<h1>Hello, ${user.firstName}!</h1><p>Reset pass on auction site.</p>` +
+        `<p><a href="${resetPassLink}">Reset email.</a></p>`,
     });
   }
 
-  async sendBuyItNowToBuyer(userBidOwner, userLotOwner, lot): Promise<SentMessageInfo> {
+  async sendBuyItNowToCustomer({ customer, lot }): Promise<SentMessageInfo> {
     return this.sendEmail( {
-      to: userBidOwner.email,
-      subject: `You ve bidded over estimated price on lot ${lot.title}`,
+      to: customer.email,
+      subject: `Your bid has won lot ${lot.title}`,
       text: `Congratulations. You ve bidded over estimated price on lot '${lot.title}'`,
       html: `<h1>Congratulations!</h1><p>You ve bidded over estimated price on lot '${lot.title}'</p>`
-      + `<p>We'll send you a mail with next step when lot's owner allow the deal.</p>`
-      + `<p>You'll see delivery details on <a>lots page</a></p>`,
+      + `<p>Checkout the order on <a target="_blank" href="${this.configService.get('FRONTEND_URL')}lots/${lot.id}">lot's page</a></p>`,
     });
   }
 
-  async sendBuyItNowToOwner(userLotOwner, userBidOwner, lot): Promise<SentMessageInfo> {
+  async sendBuyItNowToSeller({ customer, seller, lot }): Promise<SentMessageInfo> {
     return this.sendEmail( {
-      to: userLotOwner.email,
-      subject: `User '${userBidOwner.firstName}' bidded over estimated price on lot '${lot.title}'(id: ${lot.id})`,
-      text: `Auction user '${userBidOwner.firstName}' bidded over estimated price on lot '${lot.title}'(id: ${lot.id}).`
+      to: seller.email,
+      subject: `User '${customer.firstName}' bidded over estimated price on lot '${lot.title}'(id: ${lot.id})`,
+      text: `Auction user '${customer.firstName}' bidded over estimated price on lot '${lot.title}'(id: ${lot.id}).`
         + `Follow link to see delivery details.`,
-      html: `<h1>Hi!</h1><p>Auction user '${userBidOwner.firstName}' bidded over estimated price on lot '${lot.title}'(id: ${lot.id})</p>`
+      html: `<h1>Hi!</h1><p>Auction user '${customer.firstName}' bidded over estimated price on lot '${lot.title}'(id: ${lot.id})</p>`
         + `Follow <a href="">link</a> to see delivery details.`,
     });
   }
 
-  async sendLotEndTimeToBuyer(owner, buyer, lot): Promise<SentMessageInfo> {
+  async sendLotEndTimeToCustomer({ customer, lot }): Promise<SentMessageInfo> {
     const url = `${this.configService.config.frontendUrl}/lots/${lot.id}`;
     return this.sendEmail( {
-      to: buyer.email,
+      to: customer.email,
       subject: `Lot '${lot.title}' end time has passed.`,
       text: `Lot '${lot.title}' end time has passed. Url ${url}` ,
-      html: `<h1>H1</h1><p>Lot <a href="${url}">'${lot.title}'</a> end time has passed.</p><p>You are the winner.</p>`,
+      html: `<h1>Hello, ${customer.title}!</h1><p>Lot <a href="${url}">'${lot.title}'</a> end time has passed.</p><p>You are the winner.</p>`,
     });
   }
 
-  async sendLotEndTimeToOwner(owner, lot): Promise<SentMessageInfo> {
+  async sendLotEndTimeToSeller({ seller, lot }): Promise<SentMessageInfo> {
     return this.sendEmail( {
-      to: owner.email,
-      subject: `Lot '${lot.title}' end time has passed.`,
-      text: `Lot '${lot.title}' end time has passed.` ,
-      html: `<h1>H1</h1><p>Lot '${lot.title}' end time has passed.</p><p>Please, follow <a>link</a> to find if there is any bids.</p>`,
+      to: seller.email,
+      subject: `Your lot '${lot.title}' end time has passed.`,
+      text: `Your lot '${lot.title}' end time has passed.` ,
+      html: `<h1>Hello, ${seller.title}</h1><p>Lot '${lot.title}' end time has passed.</p>` +
+        `<p>Please, follow <a target="_blank" href="${this.configService.get('FRONTEND_URL')}lots/${lot.id}">link</a> to check it.</p>`,
     });
   }
 
-  // async name(user, lot): Promise<SentMessageInfo> {
-  //   return this.sendEmail( {
-  //     from: this.from,
-  //     to: user.email,
-  //     subject: '',
-  //     text: 'The' ,
-  //     html: `text`,
-  //   });
-  // }
+  async orderCreatedEmail({ user, lot }): Promise<SentMessageInfo> {
+    return this.sendEmail({
+      to: user.email,
+      subject: `Order (lot '${lot.title}') is created!`,
+      text: `Dear ${user.firstName}. Order for your lot '${lot.title}' created!` ,
+      html: `<h1>Dear ${user.firstName}</h1>` +
+        `<p>Order '${lot.title}' created!</p>` +
+        `<p>Follow '<a target="_blank" href="${this.configService.get('FRONTEND_URL')}lots/${lot.id}">link</a>' to execute an order!</p>`,
+    });
+  }
+
+  async orderUpdatedEmail({ user, lot }): Promise<SentMessageInfo> {
+    return this.sendEmail({
+      to: user.email,
+      subject: `Order (lot '${lot.title}') updated!`,
+      text: `Dear ${user.firstName}. Pay attention. Order for your lot '${lot.title}' updated!` ,
+      html: `<h1>Dear ${user.firstName}</h1>` +
+        `<p>Pay attention.</p><p>Order '${lot.title}' updated!</p>` +
+        `<p>Follow '<a target="_blank" href="${this.configService.get('FRONTEND_URL')}lots/${lot.id}">link</a>' to check changes!</p>`,
+    });
+  }
+
+  async orderExecutedEmail({ user, lot }): Promise<SentMessageInfo> {
+    return this.sendEmail( {
+      to: user.email,
+      subject: `Order (lot '${lot.title}') is executed!`,
+      text: `Dear ${user.firstName}. Order '${lot.title}' executed!` ,
+      html: `<h1>Dear ${user.firstName}</h1>` +
+        `<p>Order '<a target="_blank" href="${this.configService.get('FRONTEND_URL')}lots/${lot.id}">${lot.title}</a>' executed!</p>`,
+    });
+  }
+
+  async orderReceivedEmail({ user, lot }): Promise<SentMessageInfo> {
+    return this.sendEmail( {
+      to: user.email,
+      subject: `Order (lot '${lot.title}') is received!`,
+      text: `Dear ${user.firstName}. Order '${lot.title}' received!` ,
+      html: `<h1>Dear ${user.firstName}</h1>` +
+        `<p>Order <a target="_blank" href="${this.configService.get('FRONTEND_URL')}lots/${lot.id}">${lot.title}</a> received!</p>`,
+    });
+  }
 
   async sendEmail(emailObject): Promise<SentMessageInfo> {
     try {

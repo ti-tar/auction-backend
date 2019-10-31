@@ -13,8 +13,13 @@ export enum EMAILS {
   SEND_VERIFICATION_EMAIL = 'sendVerificationEmail',
   SEND_FORGOT_PASSWORD_MAIL = 'sendForgotPasswordMail',
 
-  EMAIL_BUY_IT_NOW_BETTING_USER = 'sendBuyItNowToBuyer',
-  EMAIL_BUY_IT_NOW_LOT_OWNER = 'sendBuyItNowToOwner',
-  EMAIL_LOT_END_TIME_BUYER = 'sendLotEndTimeToBuyer',
-  EMAIL_LOT_END_TIME_OWNER = 'sendLotEndTimeToOwner',
+  BUY_IT_NOW_EMAIL_TO_CUSTOMER = 'sendBuyItNowToCustomer',
+  BUY_IT_NOW_EMAIL_TO_SELLER = 'sendBuyItNowToSeller',
+  LOT_END_TIME_TO_CUSTOMER = 'sendLotEndTimeToCustomer',
+  LOT_END_TIME_TO_SELLER = 'sendLotEndTimeToSeller',
+
+  ORDER_CREATED_EMAIL_TO_SELLER = 'orderCreatedEmail',
+  ORDER_UPDATED_EMAIL_TO_SELLER = 'orderUpdatedEmail',
+  ORDER_EXECUTED_EMAIL_TO_CUSTOMER = 'orderExecutedEmail',
+  ORDER_RECEIVED_EMAIL_TO_SELLER = 'orderReceivedEmail',
 }

@@ -6,6 +6,8 @@ import { LotsService } from '../lots/lots.service';
 import { OrdersService } from '../orders/orders.service';
 import { UsersService } from '../users/users.service';
 import { BidsService } from '../bids/bids.service';
+import { LotStatus } from '../entities/lot';
+import { getWinnersBid } from '../libs/helpers';
 
 @Processor({ name: QUEUE_NAMES.LOTS })
 export class LotsJobs {
@@ -23,19 +25,19 @@ export class LotsJobs {
     const { lotId } = job.data;
 
     const lot = await this.lotsService.findOne(lotId);
-    const owner = await this.usersService.findOne(lot.user.id);
-    await this.emailsQueue.add(EMAILS.EMAIL_LOT_END_TIME_OWNER, { owner, lot }, { attempts: 5 });
+    await this.emailsQueue.add(EMAILS.LOT_END_TIME_TO_SELLER, { seller: lot.user, lot });
 
-    lot.status = 'closed';
+    lot.status = LotStatus.closed;
     await this.lotsService.save(lot);
 
-    if (lot.bids && lot.bids.length) {
-      const bidWinnerId = lot.bids[lot.bids.length - 1].user.id;
-      const buyer = await this.usersService.findOne(bidWinnerId);
-      await this.emailsQueue.add(EMAILS.EMAIL_LOT_END_TIME_BUYER, { buyer, owner, lot }, { attempts: 5 });
+    const winnersBid = getWinnersBid(lot.bids);
+
+    if (winnersBid) {
+      const customer = await this.usersService.findOne(winnersBid.user.id);
+      await this.emailsQueue.add(EMAILS.LOT_END_TIME_TO_CUSTOMER, { customer, seller: lot.user, lot });
     }
 
-    return this.loggerService.log(`--- Job ${job.name} processed`);
+    return this.loggerService.log(`Job ${job.name} processed`);
   }
 
   @OnQueueActive()

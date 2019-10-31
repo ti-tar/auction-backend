@@ -32,31 +32,59 @@ export class EmailsJobs {
     return `Email sent to ${sentMail.envelope.to.join(', ')}`;
   }
 
-  @Process({ name: EMAILS.EMAIL_BUY_IT_NOW_BETTING_USER })
-  async buyItNowToBuyer(job) {
-    const { buyer, owner, lot } = job.data;
-    const sentMail = await this.emailService.sendBuyItNowToBuyer(buyer, owner, lot);
+  @Process({ name: EMAILS.BUY_IT_NOW_EMAIL_TO_CUSTOMER })
+  async sendBuyItNowToCustomer(job) {
+    const { customer, lot } = job.data;
+    const sentMail = await this.emailService.sendBuyItNowToCustomer({ customer, lot });
     return `Email sent to ${sentMail.envelope.to.join(', ')}`;
   }
 
-  @Process({ name: EMAILS.EMAIL_BUY_IT_NOW_LOT_OWNER })
-  async buyItNowToOwner(job) {
-    const { owner, buyer, lot } = job.data;
-    const sentMail = await this.emailService.sendBuyItNowToOwner(owner, buyer, lot);
+  @Process({ name: EMAILS.BUY_IT_NOW_EMAIL_TO_SELLER })
+  async sendBuyItNowToSeller(job) {
+    const { customer, seller, lot } = job.data;
+    const sentMail = await this.emailService.sendBuyItNowToSeller({ customer, seller, lot });
     return `Email sent to ${sentMail.envelope.to.join(', ')}`;
   }
 
-  @Process({ name: EMAILS.EMAIL_LOT_END_TIME_BUYER })
-  async sendLotEndTimeToBuyer(job) {
-    const { buyer, owner, lot } = job.data;
-    const sentMail = await this.emailService.sendLotEndTimeToBuyer(buyer, owner, lot);
+  @Process({ name: EMAILS.LOT_END_TIME_TO_CUSTOMER })
+  async sendLotEndTimeToCustomer(job) {
+    const { customer, lot } = job.data;
+    const sentMail = await this.emailService.sendLotEndTimeToCustomer({ customer, lot });
     return `Email sent to ${sentMail.envelope.to.join(', ')}`;
   }
 
-  @Process({ name: EMAILS.EMAIL_LOT_END_TIME_OWNER })
-  async sendLotEndTimeToOwner(job) {
-    const { owner, lot } = job.data;
-    const sentMail = await this.emailService.sendLotEndTimeToOwner(owner, lot);
+  @Process({ name: EMAILS.LOT_END_TIME_TO_SELLER })
+  async sendLotEndTimeToSeller(job) {
+    const { seller, lot } = job.data;
+    const sentMail = await this.emailService.sendLotEndTimeToSeller({ seller, lot });
+    return `Email sent to ${sentMail.envelope.to.join(', ')}`;
+  }
+
+  @Process({ name: EMAILS.ORDER_CREATED_EMAIL_TO_SELLER })
+  async orderCreatedEmail(job) {
+    const { user, lot } = job.data;
+    const sentMail = await this.emailService.orderCreatedEmail({ user, lot });
+    return `Email sent to ${sentMail.envelope.to.join(', ')}`;
+  }
+
+  @Process({ name: EMAILS.ORDER_UPDATED_EMAIL_TO_SELLER })
+  async orderUpdatedEmail(job) {
+    const { user, lot } = job.data;
+    const sentMail = await this.emailService.orderUpdatedEmail({ user, lot });
+    return `Email sent to ${sentMail.envelope.to.join(', ')}`;
+  }
+
+  @Process({ name: EMAILS.ORDER_EXECUTED_EMAIL_TO_CUSTOMER })
+  async orderExecutedEmail(job) {
+    const { user, lot } = job.data;
+    const sentMail = await this.emailService.orderExecutedEmail({ user, lot });
+    return `Email sent to ${sentMail.envelope.to.join(', ')}`;
+  }
+
+  @Process({ name: EMAILS.ORDER_RECEIVED_EMAIL_TO_SELLER })
+  async orderReceivedEmail(job) {
+    const { user, lot } = job.data;
+    const sentMail = await this.emailService.orderReceivedEmail({ user, lot });
     return `Email sent to ${sentMail.envelope.to.join(', ')}`;
   }
 

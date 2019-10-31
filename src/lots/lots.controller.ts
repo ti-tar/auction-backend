@@ -117,6 +117,17 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(LotSerializerInterceptor)
+  @Put(':lotId')
+  async update(
+    @Param('lotId') lotId: number,
+    @Body(new ValidationPipe(), new LotEditValidationPipe()) lotData: CreateLotDto,
+    @UserDecorator() user,
+  ): Promise<Lot> {
+    return this.lotsService.update(lotId, lotData, user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Put(':lotId/set')
   async setLot(@Param('lotId', new ParseIntPipe()) lotId: number, @UserDecorator() user): Promise<Lot> {
     return await this.lotsService.setLotToAuction(lotId, user);
@@ -127,7 +138,7 @@ export class LotsController {
   @Post(':lotId/order')
   async createOrder(
     @Param('lotId', new ParseIntPipe()) lotId: number,
-    @Body() orderDto: OrderDto,
+    @Body(new ValidationPipe()) orderDto: OrderDto,
     @UserDecorator() user,
   ): Promise<Order> {
     return await this.ordersService.create(lotId, orderDto, user);
@@ -138,7 +149,7 @@ export class LotsController {
   @Put(':lotId/order')
   async updateOrder(
     @Param('lotId', new ParseIntPipe()) lotId: number,
-    @Body() orderDto: OrderDto,
+    @Body(new ValidationPipe()) orderDto: OrderDto,
     @UserDecorator() user,
   ): Promise<Order> {
     return await this.ordersService.update(lotId, orderDto, user);
@@ -165,26 +176,14 @@ export class LotsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(LotSerializerInterceptor)
-  @Put(':lotId')
-  async update(
-    @Param('lotId') lotId: number,
-    @Body(new ValidationPipe(), new LotEditValidationPipe()) lotData: CreateLotDto,
-    @UserDecorator() user,
-  ): Promise<Lot> {
-    return this.lotsService.update(lotId, lotData, user);
-  }
-
-  @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(BidSerializerInterceptor)
   @Post(':lotId/bids')
   async addBid(
-    @Param('lotId') lotId: number,
+    @Param('lotId', new ParseIntPipe()) lotId: number,
     @Body( new ValidationPipe() ) bidData: CreateBidDto,
     @UserDecorator() user: User,
   ): Promise<Bid> {
-    const lot = await this.lotsService.findOne(lotId);
-    return this.bidService.addBid(bidData, user, lot);
+    return this.bidService.addBid(await this.lotsService.findOne(lotId), bidData, user);
   }
 
   @UseGuards(AuthGuard('jwt'))
