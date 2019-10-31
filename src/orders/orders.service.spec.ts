@@ -4,6 +4,9 @@ import { LoggerService } from '../shared/logger.service';
 import MockedLoggerService from '../../test/services/mockedLogger.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Order } from '../entities/order';
+import { LotsService } from '../lots/lots.service';
+import { mockedLotsFromDB } from '../mockedData/lots';
+import { LotStatus } from '../entities/lot';
 
 describe('OrdersService', () => {
   let testingModule: TestingModule;
@@ -12,6 +15,7 @@ describe('OrdersService', () => {
   beforeEach(async () => {
     testingModule = await Test.createTestingModule({
       providers: [
+        OrdersService,
         {
           provide: getRepositoryToken(Order),
           useFactory: jest.fn(() => ({
@@ -23,7 +27,20 @@ describe('OrdersService', () => {
           provide: LoggerService,
           useClass: MockedLoggerService(),
         },
-        OrdersService,
+        {
+          provide: LotsService,
+          useFactory: () => ({
+            findAndCountLotsInProcess: jest.fn(() => mockedLotsFromDB.filter(l => l.status === LotStatus.inProcess)),
+            findAndCountLotsByUserId: jest.fn(() => ('')),
+            findAndCountLotsByBidUserId: jest.fn(() => ('')),
+            findOne: jest.fn(() => true),
+            delete: jest.fn(() => true),
+            update: jest.fn(() => ('')),
+            create: jest.fn(() => ('')),
+            setLotToAuction: jest.fn(() => ('')),
+          }),
+        },
+
       ],
     }).compile();
 

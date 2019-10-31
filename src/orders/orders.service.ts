@@ -127,7 +127,22 @@ export class OrdersService implements OnModuleInit {
     });
   }
 
-  async findOwnLotsOrders(userId: number): Promise < Order[] > {
-    return this.ordersRepository.find(); // todo
+  async findOrders(userId: number, query): Promise <Order[]> {
+    if (query.filters && query.filters === 'mylots') {
+      return await this.ordersRepository.createQueryBuilder('orders')
+        .leftJoinAndSelect('orders.bid', 'bids')
+        .leftJoinAndSelect('bids.user', 'users')
+        .leftJoinAndSelect('bids.lot', 'bids_lot')
+        .leftJoinAndSelect('bids_lot.user', 'bids_lot_user')
+        .where('bids_lot_user.id = :id', { id: userId })
+        .getMany();
+    }
+
+    return await this.ordersRepository.createQueryBuilder('orders')
+      .leftJoinAndSelect('orders.bid', 'bids')
+      .leftJoinAndSelect('bids.lot', 'lots')
+      .leftJoinAndSelect('bids.user', 'bids_user')
+      .where('bids_user.id = :id', { id: userId })
+      .getMany();
   }
 }
