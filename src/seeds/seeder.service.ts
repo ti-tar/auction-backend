@@ -1,7 +1,7 @@
 import * as faker from 'faker';
 
-import { Status as UserStatusEnum } from '../entities/user';
-import { Status as LotsStatusEnum } from '../entities/lot';
+import { UserStatus as UserStatusEnum } from '../entities/user';
+import { LotStatus as LotsStatusEnum } from '../entities/lot';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../shared/logger.service';
 import { DatabaseService } from '../../test/database/database.service';
