@@ -17,3 +17,4 @@ upload
 coverage
 
 docker-compose-production.yml
+ecosystem.config.js

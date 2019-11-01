@@ -7,7 +7,7 @@ import { SnakeNamingStrategy } from '../snake-naming.strategy';
 @Injectable()
 export class ConfigService {
   constructor() {
-    this.nodeEnv = this.get('NODE_ENV') || 'development';
+    this.nodeEnv = 'production'; // this.get('NODE_ENV') || 'development';
     dotenv.config({ path: `.env.${this.nodeEnv}` });
     for (const envName of Object.keys(process.env)) {
       process.env[envName] = process.env[envName].replace(/\\n/g, '\n');
