@@ -49,7 +49,7 @@ export class LotsController {
   * get lots: status in InProcess, paginating params in @Request() request
   * response serialisation in LotsSerializerInterceptor
   * */
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotsSerializerInterceptor)
   @Get()
   async getAllLots(@Request() request): Promise<Pagination<Lot>> {
@@ -86,14 +86,14 @@ export class LotsController {
     });
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(LotSerializerInterceptor)
   @Get(':lotId')
   async getLotById(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<Lot> {
     return this.lotsService.findOne(lotId);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(BidsSerializerInterceptor)
   @Get(':lotId/bids')
   async getBidsByLotId(@Param('lotId', new ParseIntPipe()) lotId: number): Promise<[Bid[], number]> {
