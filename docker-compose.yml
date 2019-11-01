@@ -29,6 +29,7 @@ services:
   redis:
     container_name: auction-redis
     image: redis:alpine
+    command: redis-server --requirepass password
     ports:
       - 6379:6379
   redis-commander:

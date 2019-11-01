@@ -44,6 +44,7 @@ export class ConfigService {
       },
       configRedis: {
         host: this.get('REDIS_HOST'),
+        password: this.get('REDIS_PASSWORD'),
         port: this.getNumber('REDIS_PORT'),
       },
       jwt: {
