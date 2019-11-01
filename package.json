@@ -5,7 +5,7 @@
   "description": "Nest TypeScript starter repository",
   "license": "MIT",
   "scripts": {
-    "build": "NODE_ENV=production rimraf dist && tsc -p tsconfig.build.json",
+    "build": "rimraf dist && tsc -p tsconfig.build.json",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "NODE_ENV=development node index.js",
     "start:debug": "NODE_ENV=development nodemon --inspect index.js",
