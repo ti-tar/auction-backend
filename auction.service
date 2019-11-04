@@ -1,0 +1,16 @@
+[Unit]
+Description=AuctionService
+Requires=docker.service
+After=docker.service pm2-auction.service
+
+[Service]
+Restart=always
+User=root
+Group=root
+
+# ExecStartPre=/usr/local/bin/docker-compose -f /var/www/auction-backend/docker-compose-production.yml stop
+ExecStart=/usr/local/bin/docker-compose -f /var/www/auction-backend/docker-compose-production.yml start
+#ExecStop=/usr/local/bin/docker-compose -f /var/www/auction-backend/docker-compose-production.yml stop
+
+[Install]
+WantedBy=multi-user.target
